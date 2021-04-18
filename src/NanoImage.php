@@ -10,7 +10,7 @@ class NanoImage{
     const PNG = ".png";
     const GIF = ".gif";
     const WEBP = ".webp";
-	private $image_url;
+    private $image_url;
     private $image_data;
     private $new_height;
     private $new_width;
