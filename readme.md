@@ -1,4 +1,4 @@
-Hi
+NanoImage is a simple image resize class. It can resize image and display it in browser or save image in a directory
 
 ```
 <?php 
