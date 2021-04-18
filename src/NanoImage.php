@@ -137,12 +137,12 @@ class NanoImage{
 
     private function build($path, $quality){
         $createImage = @imagecreatetruecolor($this->new_width, $this->new_height);
-		$white = @imagecolorallocate($createImage, 255, 255, 255);
-		@imagefilledrectangle($createImage,0,0,$this->new_width,$this->new_height,$white);
+	$white = @imagecolorallocate($createImage, 255, 255, 255);
+	@imagefilledrectangle($createImage,0,0,$this->new_width,$this->new_height,$white);
 
-		@imagecopyresampled($createImage, $this->image_data, 0, 0, 0, 0, $this->new_width, $this->new_height, $this->width, $this->height);
-		@imagejpeg($createImage, $path, $quality); 
-		@imagedestroy($createImage);
+	@imagecopyresampled($createImage, $this->image_data, 0, 0, 0, 0, $this->new_width, $this->new_height, $this->width, $this->height);
+	@imagejpeg($createImage, $path, $quality); 
+	@imagedestroy($createImage);
         return $createImage;
     }
 
