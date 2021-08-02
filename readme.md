@@ -1,7 +1,6 @@
 NanoImage is a simple image resize class. It can resize image and display it in browser or save image in a directory
 
 ```
-<?php 
   //Initalize nano image class
   $img = NanoBlockTech\NanoImage();
 
@@ -19,5 +18,4 @@ NanoImage is a simple image resize class. It can resize image and display it in 
 
   //Save image to directory
   $img->save(__DIR__ . "/path/to/assets/new-image.jpg", "thumbnail", 70);
-?>
 ```
