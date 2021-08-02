@@ -15,7 +15,7 @@
     }
 
     if (@move_uploaded_file($ImageTemp, $filePathAsset . $fileName)) {
-      $imagine = new  CustomGlobalClass\NanoImage();
+      $imagine = new  NanoBlockTech\NanoImage();
       $image = $imagine->open($logoPath . $fileName);
 
       $image->resize(360, 200, false);
