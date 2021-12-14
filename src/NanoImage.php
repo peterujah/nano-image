@@ -1,9 +1,14 @@
 <?php
 /**
-* Created by SHELL on 30/11/2017.
-* Developer name ujah chigozie | email: ujahchigozie@gmail.com
-*/
-namespace NanoBlockTech;
+ * @author      Peter Chigozie(NG) peterujah
+ * @copyright   Copyright (c), 2019 Peter(NG) peterujah
+ * @license     MIT public license
+ */
+namespace Peterujah\NanoBlock;
+
+/**
+ * Class NanoImage.
+ */
 class NanoImage{
 	public const JPG = ".jpg";
 	public const JPEG = ".jpeg";
