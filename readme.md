@@ -2,11 +2,17 @@
 
 NanoImage is a simple php image resize class. It can resize image and display it in browser or save image in a directory
 
+## Installation
+
+Installation is super-easy via Composer:
+```md
+composer require peterujah/nano-imag
+```
 
 ## Basic Usage
 
 ```php
-$img = NanoBlockTech\NanoImage();
+$img = Peterujah\NanoBlock\NanoImage();
 ```
 Initalize nano image class for use
 
