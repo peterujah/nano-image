@@ -1,0 +1,9 @@
+{
+  "name": "@peterujah/nano-image",
+  "description": "NanoImage is a simple php image resize class.",
+  "version": "0.1",
+  "homepage": "http://github.com/peterujah/nano-image",
+  "repository": "git://github.com/peterujah/nano-image.git",
+  "author": "Ujah Chigozie <ujahchigozie@gmail.com>",
+  "license": "MIT"
+}
