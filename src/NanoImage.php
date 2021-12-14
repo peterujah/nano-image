@@ -5,20 +5,22 @@
 */
 namespace NanoBlockTech;
 class NanoImage{
-    const JPG = ".jpg";
-    const JPEG = ".jpeg";
-    const PNG = ".png";
-    const GIF = ".gif";
-    const WEBP = ".webp";
-    private $image_url;
-    private $image_data;
-    private $new_height;
-    private $new_width;
-    private $crop_width;
-    private $crop_height;
-    private $height;
-    private $width;
-    private $extension;
+	public const JPG = ".jpg";
+	public const JPEG = ".jpeg";
+	public const PNG = ".png";
+	public const GIF = ".gif";
+	public const WEBP = ".webp";
+
+	private $image_url;
+	private $image_data;
+	private $new_height;
+	private $new_width;
+	private $crop_width;
+	private $crop_height;
+	private $height;
+	private $width;
+	private $extension;
+	
 	public function __construct(){
 
 	}
