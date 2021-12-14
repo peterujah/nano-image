@@ -15,7 +15,7 @@
     }
 
     if (@move_uploaded_file($ImageTemp, $filePathAsset . $fileName)) {
-      $imagine = new  NanoBlockTech\NanoImage();
+      $imagine = new  Peterujah\NanoBlock\NanoImage();
       $image = $imagine->open($logoPath . $fileName);
 
       $image->resize(360, 200, false);
