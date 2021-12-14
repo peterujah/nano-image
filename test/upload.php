@@ -1,5 +1,6 @@
-```php
 <?php
+  require_once __DIR__ "/autoload.php";
+
   if(isset($_FILES['image'])){
     $ImageTemp = $_FILES['image']['tmp_name'];
     $fileName = 'old-image.jpg'; 
