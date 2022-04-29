@@ -15,6 +15,7 @@ class NanoImage{
 	public const PNG = ".png";
 	public const GIF = ".gif";
 	public const WEBP = ".webp";
+    public const THUMBNAIL = "thumbnail";
 
 	private $image_url;
 	private $image_data;
@@ -25,6 +26,10 @@ class NanoImage{
 	private $height;
 	private $width;
 	private $extension;
+    private $save_extension;
+    private $dirname;
+    private $filename;
+    private $full_path;
 	
 	public function __construct(){
 
@@ -144,12 +149,12 @@ class NanoImage{
 
     private function build($path, $quality){
         $createImage = @imagecreatetruecolor($this->new_width, $this->new_height);
-	$white = @imagecolorallocate($createImage, 255, 255, 255);
-	@imagefilledrectangle($createImage,0,0,$this->new_width,$this->new_height,$white);
+        $white = @imagecolorallocate($createImage, 255, 255, 255);
+        @imagefilledrectangle($createImage,0,0,$this->new_width,$this->new_height,$white);
 
-	@imagecopyresampled($createImage, $this->image_data, 0, 0, 0, 0, $this->new_width, $this->new_height, $this->width, $this->height);
-	@imagejpeg($createImage, $path, $quality); 
-	@imagedestroy($createImage);
+        @imagecopyresampled($createImage, $this->image_data, 0, 0, 0, 0, $this->new_width, $this->new_height, $this->width, $this->height);
+        @imagejpeg($createImage, $path, $quality); 
+        @imagedestroy($createImage);
         return $createImage;
     }
 
@@ -166,40 +171,90 @@ class NanoImage{
     }
 
     /**
-     * Save image to directory.
+     * Execute image edit and save to directory.
      *
      * @param string $to Full directory to save image
-     * @param string $copy_algo Specify how image should be saved NULL will delete existing image from directory
+     * @param string $image_type Specify how image should be saved NULL will delete existing image from directory
      * While passing thumbnail will rename image using height and width
      * @param int $quality The require quality to set image
      * 
-     */
-    public function save($to, $copy_algo=null, $quality=90){
-        $info = pathinfo( (!empty($to) ? $to : $this->localPath()) );
-        $extension = strtolower($info['extension']);
-        $dirname = $info['dirname']??null;
-        $filename = $info['filename']??null;
-        $full_path = $dirname . DIRECTORY_SEPARATOR . $filename . "." . $extension;
-
-        if(!is_dir($dirname)){
-            mkdir($dirname, 0777, true);
-            chmod($dirname, 0755);
+    */
+    private function execute($to, $image_type = null, $quality = 90){
+        if(!is_dir($this->dirname)){
+            mkdir($this->dirname, 0777, true);
+            chmod($this->dirname, 0755);
         }
-        if(file_exists($full_path)){
-            if(!empty($copy_algo)){
-                if($copy_algo == "thumbnail"){
-                    $full_path = $dirname . DIRECTORY_SEPARATOR . $filename . "-" . $this->crop_width . 'x' . $this->crop_height . "." . $extension;
-                    if(file_exists($full_path)){
-                        unlink($full_path);
+        if(file_exists($this->full_path)){
+            if(!empty($image_type)){
+                if($image_type == self::THUMBNAIL){
+                    $this->full_path = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . $this->crop_width . 'x' . $this->crop_height . "." . $this->save_extension;
+                    if(file_exists($this->full_path)){
+                        unlink($this->full_path);
                     }
                 }else{
-                    $full_path = $dirname . DIRECTORY_SEPARATOR . $filename . "-" . date("d-m-y h:m:s") . "." . $extension;
+                    $this->full_path = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . date("d-m-y h:m:s") . "." . $this->save_extension;
                 }
             }else{
-                unlink($full_path);
+                unlink($this->full_path);
             }
         }
-        $this->build($full_path, $quality);
+        $this->build($this->full_path, $quality);
+    }
+
+    /**
+     * Set image fileinfo.
+     *
+     * @param string $to Full directory to save image
+     * @param string $ext Save image with extension
+     * 
+    */
+    public function fileinfo($to, $ext = null){
+        $info = pathinfo( (!empty($to) ? $to : $this->localPath()) );
+        $this->save_extension = (!empty($ext) ? $ext : strtolower($info['extension']));
+        $this->dirname = $info['dirname']??null;
+        $this->filename = $info['filename']??null;
+        $this->full_path = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "." . $this->save_extension;
+    }
+
+    /**
+     * Save image to directory.
+     *
+     * @param string $to Full directory to save image
+     * @param string $image_type Specify how image should be saved NULL will delete existing image from directory
+     * While passing thumbnail will rename image using height and width
+     * @param int $quality The require quality to set image
+     * 
+    */
+    public function save($to, $image_type = null, $quality=90){
+        $this->fileinfo($to);
+        $this->execute($to, $image_type, $quality);
+    }
+
+    /**
+     * Save image to directory using specific extension.
+     *
+     * @param string $to Full directory to save image
+     * @param string $image_type Specify how image should be saved NULL will delete existing image from directory
+     * While passing thumbnail will rename image using height and width
+     * @param int $quality The require quality to set image
+     * @param string $ext Save image with extension
+     * 
+    */
+    public function saveAs($to, $image_type = null, $quality=90, $ext = self::JPEG){
+        $this->fileinfo($to, $ext);
+        $this->execute($to, $image_type, $quality);
+    }
+
+    /**
+     * Save image to directory by replacing old image.
+     *
+     * @param string $to Full directory to save image
+     * @param int $quality The require quality to set image
+     * 
+    */
+    public function replace($to, $quality=90){
+        $this->fileinfo($to);
+        $this->execute($to, null, $quality);
     }
 
     /**
@@ -209,6 +264,10 @@ class NanoImage{
         $this->image_url = null;
         $this->image_data = null;
         $this->extension = null;
+        $this->save_extension = null;
+        $this->dirname = null;
+        $this->filename = null;
+        $this->full_path = null;
         $this->height = 0;
         $this->width = 0;
         $this->new_width = 0;
