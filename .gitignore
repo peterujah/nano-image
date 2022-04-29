@@ -1,3 +1,3 @@
-Dockerfile
-docker-compose.yml
-vendor
+composer.phar
+/vendor/
+# composer.lock
