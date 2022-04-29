@@ -256,6 +256,13 @@ class NanoImage{
 		$this->fileinfo($to);
 		$this->execute($to, null, $quality);
 	}
+	
+	/**
+	* Remove original image 
+	*/
+	public function remove(){
+		unlink($this->image_url);
+	}
 
 	/**
 	* Free image instance.
