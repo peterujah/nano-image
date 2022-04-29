@@ -2,6 +2,7 @@
     "name": "peterujah/nano-image",
     "type": "library",
     "description": "NanoImage is a simple php image resize class.",
+    "keywords": ["image", "image-lib", "php image", "php", "edit image"],
     "license": "MIT",
     "authors": [
         {
@@ -12,28 +13,15 @@
     "require": {
         "php": "^7.0 || ^8.0"
     },
-    "require-dev": {
-        "peterujah/nano-image": "^0.1"
-    },
-    "scripts": {
-        "post-install-cmd": [
-            "PeterUjah\\CopyFile\\ScriptHandler::copy"
-        ],
-        "post-update-cmd": [
-            "PeterUjah\\CopyFile\\ScriptHandler::copy"
-        ]
-    },
-     "extra": {
-        "branch-alias": {
-            "dev-master": "0.1-dev"
-        }
-    },
     "autoload": {
         "psr-4": { 
             "Peterujah\\NanoBlock\\": "src/" 
         }
     },
-    
-    "minimum-stability": "dev",
+     "extra": {
+        "branch-alias": {
+            "dev-master": "0.2-dev"
+        }
+    },
     "prefer-stable": true
 }
