@@ -31,30 +31,30 @@ $img->load($image_data);
 Resize image with exact width and height passed, example 200x200. To resize image using aspect ratio set the thrid parameter to true
 
 ```php
-$img->resize(200, 200, false);
+$img->resize(200, 200, false||true);
 ```
 
 Once image manipulation is done display the output image on browser. Pass qaulity of image
 
 ```php
-$img->display(70);
+$img->display($quality);
 ```
 
 Save image to directory, first parameter specify the path, second default is null while quality is 90 by default
 ```php
-$img->save(__DIR__ . "/path/to/assets/new-image.jpg", NanoImage::THUMBNAIL, 70);
+$img->save(__DIR__ . "/path/to/assets/new-image.jpg", NanoImage::THUMBNAIL || null, $quality);
 ```
 
 Save image as
 
 ```php
-$img->saveAs($to, $image_type = null, $quality=90, $ext = self::JPEG)
+$img->saveAs($to, NanoImage::THUMBNAIL || null, $quality, self::JPEG)
 ```
 
 Replace existing image with new one
 
 ```php
-$img->replace($to, $quality=90)
+$img->replace($to, $quality)
 ```
 
 Remove temp image after editing and free momory
