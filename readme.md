@@ -47,22 +47,24 @@ $img->save(__DIR__ . "/path/to/assets/new-image.jpg", NanoImage::THUMBNAIL, 70);
 
 Save image as
 
-```
+```php
 $img->saveAs($to, $image_type = null, $quality=90, $ext = self::JPEG)
 ```
 
 Replace existing image with new one
 
-```
+```php
 $img->replace($to, $quality=90)
 ```
 
 Remove temp image after editing and free momory
-```
+
+```php
 $img->remove()
 ```
 
 Free memory
-```
+
+```php
 $img->free()
 ```
