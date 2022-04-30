@@ -17,30 +17,52 @@ $img = Peterujah\NanoBlock\NanoImage();
 Initalize nano image class for use
 
 
-Open image from path 
+Open and load image from by passing the directory path & file name
 
 ```php
 $img->open(__DIR__ . "/path/to/assets/image.jpg");
 ```
+Or load string containing the image data.
 
-Resize image with exact width and height passed, example 200x200 
+```php
+$img->load($image_data);
+```
+
+Resize image with exact width and height passed, example 200x200. To resize image using aspect ratio set the thrid parameter to true
 
 ```php
 $img->resize(200, 200, false);
 ```
-Resize image using aspect ratio
 
-```php
-$img->resize(200, 200, true);
-```
-
-Display image in browser, and pass qaulity of image
+Once image manipulation is done display the output image on browser. Pass qaulity of image
 
 ```php
 $img->display(70);
 ```
 
-Save image to directory
+Save image to directory, first parameter specify the path, second default is null while quality is 90 by default
 ```php
-$img->save(__DIR__ . "/path/to/assets/new-image.jpg", "thumbnail", 70);
-    
+$img->save(__DIR__ . "/path/to/assets/new-image.jpg", NanoImage::THUMBNAIL, 70);
+```
+
+Save image as
+
+```
+$img->saveAs($to, $image_type = null, $quality=90, $ext = self::JPEG)
+```
+
+Replace existing image with new one
+
+```
+$img->replace($to, $quality=90)
+```
+
+Remove temp image after editing and free momory
+```
+$img->remove()
+```
+
+Free memory
+```
+$img->free()
+```
