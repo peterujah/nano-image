@@ -6,7 +6,7 @@ NanoImage is a simple php image resize class. It can resize image and display it
 
 Installation is super-easy via Composer:
 ```md
-composer require peterujah/nano-imag
+composer require peterujah/nano-image
 ```
 
 ## Basic Usage
