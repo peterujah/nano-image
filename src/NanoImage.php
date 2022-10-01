@@ -148,14 +148,18 @@ class NanoImage{
 	*/
 
 	private function build($path, $quality){
-		$createImage = @imagecreatetruecolor($this->new_width, $this->new_height);
-		$white = @imagecolorallocate($createImage, 255, 255, 255);
-		@imagefilledrectangle($createImage,0,0,$this->new_width,$this->new_height,$white);
-
-		@imagecopyresampled($createImage, $this->image_data, 0, 0, 0, 0, $this->new_width, $this->new_height, $this->width, $this->height);
-		@imagejpeg($createImage, $path, $quality); 
-		@imagedestroy($createImage);
-		return $createImage;
+		if($createImage = @imagecreatetruecolor($this->new_width, $this->new_height)){
+			if(!$createImage){
+				$white = @imagecolorallocate($createImage, 255, 255, 255);
+				@imagefilledrectangle($createImage,0,0,$this->new_width,$this->new_height,$white);
+				if(@imagecopyresampled($createImage, $this->image_data, 0, 0, 0, 0, $this->new_width, $this->new_height, $this->width, $this->height)){
+					@imagejpeg($createImage, $path, $quality); 
+					@imagedestroy($createImage);
+				}
+			}
+			return $createImage;
+		}
+		return false;
 	}
 
 	/**
@@ -189,13 +193,13 @@ class NanoImage{
 			if($image_type == self::THUMBNAIL){
 			    $this->full_path = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . $this->crop_width . 'x' . $this->crop_height . "." . $this->save_extension;
 			    if(file_exists($this->full_path)){
-				unlink($this->full_path);
+					unlink($this->full_path);
 			    }
 			}else{
 			    $this->full_path = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . date("d-m-y h:m:s") . "." . $this->save_extension;
 			}
 		    }else{
-			unlink($this->full_path);
+				unlink($this->full_path);
 		    }
 		}
 		$this->build($this->full_path, $quality);
