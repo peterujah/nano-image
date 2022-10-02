@@ -117,11 +117,11 @@ class NanoImage{
 	public function resize($width, $height, $ratio = false){
 		if($ratio){
 		    if($this->width > $this->height){
-			$newHeight = $height;
-			$newWidth = ($width / $this->height) * $this->width;
+				$newHeight = $height;
+				$newWidth = ($width / $this->height) * $this->width;
 		    }else{
-			$newWidth = $width;
-			$newHeight = ($height / $this->width) * $this->height;
+				$newWidth = $width;
+				$newHeight = ($height / $this->width) * $this->height;
 		    }
 		    $this->new_width = $newWidth;
 		    $this->new_height = $newHeight;
@@ -155,9 +155,9 @@ class NanoImage{
 				if(@imagecopyresampled($createImage, $this->image_data, 0, 0, 0, 0, $this->new_width, $this->new_height, $this->width, $this->height)){
 					@imagejpeg($createImage, $path, $quality); 
 					@imagedestroy($createImage);
+					return true;
 				}
 			}
-			return $createImage;
 		}
 		return false;
 	}
@@ -190,19 +190,19 @@ class NanoImage{
 		}
 		if(file_exists($this->full_path)){
 		    if(!empty($image_type)){
-			if($image_type == self::THUMBNAIL){
-			    $this->full_path = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . $this->crop_width . 'x' . $this->crop_height . "." . $this->save_extension;
-			    if(file_exists($this->full_path)){
-					unlink($this->full_path);
-			    }
-			}else{
-			    $this->full_path = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . date("d-m-y h:m:s") . "." . $this->save_extension;
-			}
+				if($image_type == self::THUMBNAIL){
+					$this->full_path = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . $this->crop_width . 'x' . $this->crop_height . "." . $this->save_extension;
+					if(file_exists($this->full_path)){
+						unlink($this->full_path);
+					}
+				}else{
+					$this->full_path = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . date("d-m-y h:m:s") . "." . $this->save_extension;
+				}
 		    }else{
 				unlink($this->full_path);
 		    }
 		}
-		$this->build($this->full_path, $quality);
+		return $this->build($this->full_path, $quality);
 	}
 
 	/**
@@ -231,7 +231,7 @@ class NanoImage{
 	*/
 	public function save($to, $image_type = null, $quality=90){
 		$this->fileinfo($to);
-		$this->execute($to, $image_type, $quality);
+		return $this->execute($to, $image_type, $quality);
 	}
 
 	/**
@@ -246,7 +246,7 @@ class NanoImage{
 	*/
 	public function saveAs($to, $image_type = null, $quality=90, $ext = self::JPEG){
 		$this->fileinfo($to, $ext);
-		$this->execute($to, $image_type, $quality);
+		return $this->execute($to, $image_type, $quality);
 	}
 
 	/**
@@ -258,7 +258,7 @@ class NanoImage{
 	*/
 	public function replace($to, $quality=90){
 		$this->fileinfo($to);
-		$this->execute($to, null, $quality);
+		return $this->execute($to, null, $quality);
 	}
 	
 	/**
@@ -266,6 +266,7 @@ class NanoImage{
 	*/
 	public function remove(){
 		unlink($this->image_url);
+		return $this;
 	}
 
 	/**
