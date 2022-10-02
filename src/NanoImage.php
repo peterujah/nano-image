@@ -80,6 +80,24 @@ class NanoImage{
 	}
 
 	/**
+	* get image width.
+	*
+	* @return int image width
+	*/
+	public function getWidth(){
+		return $this->width;
+	}
+
+	/**
+	* get image height.
+	*
+	* @return int image height
+	*/
+	public function getHeight(){
+		return $this->height;
+	}
+
+	/**
 	* Set image height.
 	*
 	* @param int $height The original height of image
