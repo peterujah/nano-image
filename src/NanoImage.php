@@ -15,9 +15,9 @@ class NanoImage{
 	public const PNG = "png";
 	public const GIF = "gif";
 	public const WEBP = "webp";
-	public const BMP = "bmp"
+	public const BMP = "bmp";
 	public const THUMBNAIL = 1;
-	public const = TIMESTAMP = 2
+	public const TIMESTAMP = 2;
 
 	private $imagePath;
 	private $imageData;
