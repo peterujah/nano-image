@@ -12,7 +12,7 @@ composer require peterujah/nano-image
 ## Basic Usage
 
 ```php
-$img = Peterujah\NanoBlock\NanoImage();
+$img = new Peterujah\NanoBlock\NanoImage();
 ```
 Initalize nano image class for use
 
@@ -48,7 +48,7 @@ $img->save(__DIR__ . "/path/to/assets/new-image.jpg", NanoImage::THUMBNAIL || nu
 Save image as
 
 ```php
-$img->saveAs($to, NanoImage::THUMBNAIL || null, $quality, self::JPEG)
+$img->saveAs($to, NanoImage::THUMBNAIL || NanoImage::TIMESTAMP, $quality, self::JPEG)
 ```
 
 Replace existing image with new one
