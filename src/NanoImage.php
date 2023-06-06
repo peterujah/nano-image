@@ -262,6 +262,19 @@ class NanoImage{
 	}
 
 	/**
+	* Read image exif data
+	* @param string||path $from path to image
+	* @return array||bool image exif data or false 
+	*/
+	public function readExif($from = null){
+		$exifData = exif_read_data(!empty($from) ? $from : $this->imagePath);
+		if ($exifData !== false) {
+			return $exifData;
+		}
+		return false;
+	}
+
+	/**
 	* Display image in browser.
 	* @param int $quality The require quality to set image
 	* @return image resource identifier on success, false on errors.
