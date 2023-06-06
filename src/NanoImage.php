@@ -229,7 +229,7 @@ class NanoImage{
 	*/
 	public function addExif($to, $addExif = array()){
 		// Read the Exif data from the source image
-		$readExif = exif_read_data($this->imagePath);
+		$readExif = $this->readExif(null);
 		$readExif['DateTime'] = date('Y:m:d H:i:s');
 		$exifData = array_merge($readExif, $addExif);
 		$exifThumbnail = exif_thumbnail($this->imagePath, $width, $height, $type);
@@ -271,7 +271,7 @@ class NanoImage{
 		if ($exifData !== false) {
 			return $exifData;
 		}
-		return false;
+		return [];
 	}
 
 	/**
