@@ -139,14 +139,12 @@ class NanoImage{
 	public function resize($width, $height, $ratio = false){
 		if($ratio){
 		    if($this->width > $this->height){
-				$newHeight = $height;
-				$newWidth = ($width / $this->height) * $this->width;
+				$this->new_height = $height;
+				$this->new_width = ($width / $this->height) * $this->width;
 		    }else{
-				$newWidth = $width;
-				$newHeight = ($height / $this->width) * $this->height;
+				$this->new_width = $width;
+				$this->new_height = ($height / $this->width) * $this->height;
 		    }
-		    $this->new_width = $newWidth;
-		    $this->new_height = $newHeight;
 		}else{
 		    $this->new_width = $width;
 		    $this->new_height = $height;
@@ -155,6 +153,7 @@ class NanoImage{
 		$this->crop_height = $height;
 		return $this;
 	}
+	
 
 	private function localPath(){
 		return __DIR__ . DIRECTORY_SEPARATOR . "images" . DIRECTORY_SEPARATOR . "nano-image" . self::JPEG;
@@ -229,7 +228,7 @@ class NanoImage{
 	*/
 	public function addExif($to, $addExif = array()){
 		// Read the Exif data from the source image
-		$readExif = $this->readExif(null);
+		$readExif = exif_read_data($this->imagePath);
 		$readExif['DateTime'] = date('Y:m:d H:i:s');
 		$exifData = array_merge($readExif, $addExif);
 		$exifThumbnail = exif_thumbnail($this->imagePath, $width, $height, $type);
@@ -259,19 +258,6 @@ class NanoImage{
 			imagedestroy($imageResource);
 		}
 		return true;
-	}
-
-	/**
-	* Read image exif data
-	* @param string||path $from path to image
-	* @return array||bool image exif data or false 
-	*/
-	public function readExif($from = null){
-		$exifData = exif_read_data(!empty($from) ? $from : $this->imagePath);
-		if ($exifData !== false) {
-			return $exifData;
-		}
-		return [];
 	}
 
 	/**
