@@ -18,13 +18,13 @@ class NanoImage{
 	public const BMP = "bmp";
 	public const THUMBNAIL = 1;
 	public const TIMESTAMP = 2;
-
-	private $imagePath;
+	public $imageOriginalPath = null;
+	public $imagePath;
+	public $crop_width;
+	public $crop_height;
 	private $imageData;
 	private $new_height;
 	private $new_width;
-	private $crop_width;
-	private $crop_height;
 	private $height;
 	private $width;
 	private $imageType;
@@ -45,6 +45,7 @@ class NanoImage{
 	*/
 	public function open($url){
 		$this->imagePath = $url;
+		$this->imageOriginalPath = $url;
 		list($width, $height, $imageType, $mime) = getimagesize($this->imagePath);
 		$this->height = $height;
 		$this->width = $width;
@@ -139,11 +140,11 @@ class NanoImage{
 	public function resize($width, $height, $ratio = false){
 		if($ratio){
 		    if($this->width > $this->height){
-				$this->new_height = $height;
-				$this->new_width = ($width / $this->height) * $this->width;
+			$this->new_height = $height;
+			$this->new_width = ($width / $this->height) * $this->width;
 		    }else{
-				$this->new_width = $width;
-				$this->new_height = ($height / $this->width) * $this->height;
+			$this->new_width = $width;
+			$this->new_height = ($height / $this->width) * $this->height;
 		    }
 		}else{
 		    $this->new_width = $width;
@@ -167,8 +168,8 @@ class NanoImage{
 	* @return image resource identifier on success, false on errors.
 	*/
 
-	private function build($path, $quality, $extension){
-		$createImage = @imagecreatetruecolor($this->new_width, $this->new_height);
+	public function build($path, $quality, $extension){
+		$createImage = imagecreatetruecolor($this->new_width, $this->new_height);
 		if ($createImage !== false) {
 			$white = imagecolorallocate($createImage, 255, 255, 255);
 			imagefilledrectangle($createImage, 0, 0, $this->new_width, $this->new_height, $white);
@@ -289,16 +290,16 @@ class NanoImage{
 			mkdir($this->dirname, 0755, true);
 		}
 		if(file_exists($this->finalPath)){
-			$deleteFile = true;
+		    $deleteFile = true;
 		    if(!empty($nameFormat)){
-				if($nameFormat == self::THUMBNAIL){
-					$thumbnailPath = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . $this->crop_width . 'x' . $this->crop_height . "." . $this->extension;
-					$deleteFile = file_exists($thumbnailPath);
-					$this->finalPath = $thumbnailPath;
-				}else if($nameFormat == self::TIMESTAMP){
-					$deleteFile = false;
-					$this->finalPath = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . date("d-m-y h:m:s") . "." . $this->extension;
-				}
+			if($nameFormat == self::THUMBNAIL){
+				$thumbnailPath = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . $this->crop_width . 'x' . $this->crop_height . "." . $this->extension;
+				$deleteFile = file_exists($thumbnailPath);
+				$this->finalPath = $thumbnailPath;
+			}else if($nameFormat == self::TIMESTAMP){
+				$deleteFile = false;
+				$this->finalPath = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . date("d-m-y h:m:s") . "." . $this->extension;
+			}
 		    }
 			
 			if($deleteFile){
