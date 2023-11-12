@@ -12,12 +12,29 @@ composer require peterujah/nano-image
 ## Basic Usage
 
 ```php
+$image = new NanoImage();
+try{
+  $image = $imagine->open($logoPath . $fileName);
+
+  $image->resize(360, 200, false);
+  $image->save($filePathAsset . $imageName, NanoImage::THUMBNAIL, 80);
+
+  $image->resize(116, 80, false);
+  $image->saveAs($filePathAsset . $imageName, NanoImage::THUMBNAIL, 100, $imagine::JPEG);
+
+  $image->free();
+}catch(UnsupportedImageException $e){
+  echo $e->getMessage();
+}
+```
+
+```php
 $img = new Peterujah\NanoBlock\NanoImage();
 ```
-Initalize nano image class for use
+Initialize nano image class for use
 
 
-Open and load image from by passing the directory path & file name
+Open and load any image from a directory path & file name
 
 ```php
 $img->open(__DIR__ . "/path/to/assets/image.jpg");
