@@ -8,7 +8,7 @@ namespace Peterujah\NanoBlock;
 use \Exception;
 class UnsupportedImageException extends Exception
 {
-    public function __construct($message = 'Unsupported image format', $code = 0, Exception $previous = null)
+    public function __construct(string $message = 'Unsupported image format', int $code = 0, Exception $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }
