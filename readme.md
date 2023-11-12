@@ -14,13 +14,13 @@ composer require peterujah/nano-image
 ```php
 $image = new NanoImage();
 try{
-  $image = $imagine->open($logoPath . $fileName);
+  $image = $imagine->open("path/to/save/edit-image-size.jpg");
 
   $image->resize(360, 200, false);
-  $image->save($filePathAsset . $imageName, NanoImage::THUMBNAIL, 80);
+  $image->save("path/to/save/new-image.jpg", NanoImage::THUMBNAIL, 80);
 
   $image->resize(116, 80, false);
-  $image->saveAs($filePathAsset . $imageName, NanoImage::THUMBNAIL, 100, $imagine::JPEG);
+  $image->saveAs("path/to/save/new-image.jpeg", NanoImage::THUMBNAIL, 100, NanoImage::JPEG);
 
   $image->free();
 }catch(UnsupportedImageException $e){
