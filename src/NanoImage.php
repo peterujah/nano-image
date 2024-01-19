@@ -156,7 +156,6 @@ class NanoImage{
 	* @return NanoImage $this class instance
 	* @throws InvalidArgumentException
 	*/
-
 	public function open(string $imageLocation): self
 	{
 		$this->imagePath = $imageLocation;
@@ -275,7 +274,6 @@ class NanoImage{
 	* 
 	* @return NanoImage $this class instance
 	*/
-
 	public function resize(int $width, int $height, bool $ratio = false): self
 	{
 		$this->new_width = (int) ($ratio ? ($this->width > $this->height ? ($width / $this->height) * $this->width : $width) : $width);
@@ -292,7 +290,6 @@ class NanoImage{
 	* 
 	* @return string 
 	*/
-
 	private function defaultLocation(): string
 	{
 		return __DIR__ . DIRECTORY_SEPARATOR . "images" . DIRECTORY_SEPARATOR . "nano-image" . self::JPEG;
@@ -307,7 +304,6 @@ class NanoImage{
 	*
 	* @return string|bool string resource or bool.
 	*/
-
 	private function build(?string $path = null, int $quality = 100, string $extension = "jpg"): mixed
 	{
 		$write = false;
@@ -324,40 +320,39 @@ class NanoImage{
 		return $write;
 	}
 	
-
 	/**
 	* Save image as specified type, quality and size 
 	*
 	* @param GdImage $image image resource 
-	* @param string|null $path image new path  
+	* @param string|null $file image new file  
 	* @param string|null $extension image extension 
 	* @param int $quality image quality 
 	*
 	* @return string|bool image resource identifier or bool
 	*/
-	private function writeImage(GdImage $image, ?string $path = null, ?string $extension = "jpg", int $quality = 100): mixed
+	private function writeImage(GdImage $image, ?string $file = null, ?string $extension = "jpg", int $quality = 100): mixed
 	{
 		$result = false;
 		if ($extension == self::PNG) {
-			$result = imagepng($image, $path, $quality);
+			$result = imagepng($image, $file, $quality);
 		} else if ($extension == self::GIF) {
-			$result = imagegif($image, $path, $quality);
+			$result = imagegif($image, $file);
 		} else if ($extension == self::WEBP) {
-			$result = imagewebp($image, $path, $quality);
+			$result = imagewebp($image, $file, $quality);
 		} else if ($extension == self::BMP) {
 			if (function_exists('imagebmp')) {
-				$result = imagebmp($image, $path);
+				$result = imagebmp($image, $file);
 			} else {
-				$result = $this->image_bmp($image, $path);
+				$result = $this->image_bmp($image, $file);
 			}
 		} else {
-			$result = imagejpeg($image, $path, $quality);
+			$result = imagejpeg($image, $file, $quality);
 		}
 		imagedestroy($this->imageData);
+		
 		return $result;
 	}
 	
-
 	/**
 	* Remove image exif data
 	* @param string $saveTo Path to save new image
@@ -468,9 +463,9 @@ class NanoImage{
 	private function fileinfo(string $saveTo, ?string $extension = null): void 
 	{
 		$info = pathinfo( (!empty($saveTo) ? $saveTo : $this->defaultLocation()) );
-		$this->extension = ($extension !== null ? $extension : strtolower($info['extension']));
-		$this->dirname = $info['dirname']??null;
-		$this->filename = $info['filename']??null;
+		$this->extension = ($extension === null ? strtolower($info['extension']) : $extension);
+		$this->dirname = $info['dirname'] ?? '';
+		$this->filename = $info['filename'] ?? '';
 		$this->finalPath = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "." . $this->extension;
 	}
 
@@ -539,11 +534,11 @@ class NanoImage{
 	/**
 	* Bitmap image function 
 	* @param GdImage $image image resource 
-	* @param string|null $filename image name and path to sve
-
+	* @param string|null $file optional image name and path to sve
+	*
 	* @return string|bool  true or false
 	*/
-	public function image_bmp(GdImage $image, ?string $filename = null): mixed
+	public function image_bmp(GdImage $image, ?string $file = null): mixed
 	{
 		if ($image === null) {
 			return false;
@@ -590,11 +585,11 @@ class NanoImage{
 			$bmpData .= str_repeat("\x00", $width % 4); // Padding to ensure row length is multiple of 4 bytes
 		}
 
-		if($filename === null){
+		if($file === null){
 			return $bmpData;
 		}
 	
-		if(file_put_contents($filename, $bmpData) === false){
+		if(file_put_contents($file, $bmpData) === false){
 			return false;
 		}
 
@@ -603,17 +598,18 @@ class NanoImage{
 
 	/**
 	* Free image instance.
+	*
 	* @return void
 	*/
 	public function free(): void 
 	{
-		$this->imagePath = null;
+		$this->imagePath = '';
 		$this->imageData = null;
-		$this->imageType = null;
-		$this->extension = null;
-		$this->dirname = null;
-		$this->filename = null;
-		$this->finalPath = null;
+		$this->imageType = '';
+		$this->extension = '';
+		$this->dirname = '';
+		$this->filename = '';
+		$this->finalPath = '';
 		$this->height = 0;
 		$this->width = 0;
 		$this->new_width = 0;
