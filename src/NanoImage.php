@@ -60,10 +60,16 @@ class NanoImage{
 	public const TIMESTAMP = 2;
 
 	/**
+	* Save image with name
+	* @var int DEFAULT 
+	*/
+	public const DEFAULT = 0;
+
+	/**
 	* Image path location
 	* @var string $imagePath 
 	*/
-	private $imagePath;
+	private string $imagePath = '';
 
 	/**
 	* Image resource
@@ -75,25 +81,25 @@ class NanoImage{
 	* Image final height
 	* @var int $new_height 
 	*/
-	private $new_height;
+	private int $new_height = 0;
 
 	/**
 	* Image final width
 	* @var int $new_width 
 	*/
-	private $new_width;
+	private int $new_width = 0;
 
 	/**
 	* Image cropped width
 	* @var int $crop_width 
 	*/
-	private $crop_width;
+	private int $crop_width = 0;
 
 	/**
 	* Image cropped height
 	* @var int $crop_height 
 	*/
-	private $crop_height;
+	private int $crop_height = 0;
 
 	/**
 	* Image height
@@ -111,32 +117,35 @@ class NanoImage{
 	* Image extension type
 	* @var string $imageType 
 	*/
-	private $imageType;
+	private string $imageType = '';
 
 	/**
 	* Image extension type
 	* @var string $extension 
 	*/
-	private $extension;
+	private string $extension = '';
 
 	/**
 	* Image save directory name
 	* @var string $dirname 
 	*/
-	private $dirname;
+	private string $dirname = '';
 
 	/**
 	* Image file name
 	* @var string $filename 
 	*/
-	private $filename;
+	private string $filename = '';
 
 	/**
 	* Image save location
 	* @var string $finalPath 
 	*/
-	private $finalPath;
+	private string $finalPath = '';
 
+	/**
+	 * Initialize NanoImage class
+	*/
 	public function __construct(){}
 
 	/**
@@ -417,25 +426,25 @@ class NanoImage{
 	/**
 	* Execute image edit and save to directory.
 	*
-	* @param int $nameFormat Specify how image should be saved 0 will delete existing image from directory
+	* @param int $nameFormat Specify how image should be saved NanoImage::DEFAULT will delete existing image from directory
 	* While passing thumbnail will rename image using height and width and timestamp will use timestamp to save the image
 	* @param int $quality The require quality to set image
 	*
 	* @return string|bool
 	*/
-	private function execute(int $nameFormat = 0, int $quality = 90): mixed 
+	private function execute(int $nameFormat = self::DEFAULT, int $quality = 90): mixed 
 	{
 		if(!is_dir($this->dirname)){
 			mkdir($this->dirname, 0755, true);
 		}
 		if(file_exists($this->finalPath)){
 			$deleteFile = true;
-		    if($nameFormat > 0){
-				if($nameFormat == self::THUMBNAIL){
+		    if($nameFormat !== self::DEFAULT){
+				if($nameFormat === self::THUMBNAIL){
 					$thumbnailPath = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . $this->crop_width . 'x' . $this->crop_height . "." . $this->extension;
 					$deleteFile = file_exists($thumbnailPath);
 					$this->finalPath = $thumbnailPath;
-				}else if($nameFormat == self::TIMESTAMP){
+				}else if($nameFormat === self::TIMESTAMP){
 					$deleteFile = false;
 					$this->finalPath = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . date("d-m-y h:m:s") . "." . $this->extension;
 				}
@@ -469,13 +478,13 @@ class NanoImage{
 	* Save image to directory.
 	*
 	* @param string $saveTo Full directory to save image
-	* @param string $type Specify how image should be saved NULL will delete existing image from directory
+	* @param int $type Specify how image should be saved 0 will delete existing image from directory
 	* While passing thumbnail will rename image using height and width
 	* @param int $quality The require quality to set image
 	* 
 	* @return bool
 	*/
-	public function save(string $saveTo, ?string $type = null, $quality = 90): bool 
+	public function save(string $saveTo, int $type = self::DEFAULT, $quality = 90): bool 
 	{
 		$this->fileinfo($saveTo);
 		$write = $this->execute($type, $quality);
@@ -493,7 +502,7 @@ class NanoImage{
 	* 
 	* @return bool
 	*/
-	public function saveAs(string $saveTo, int $type = 0, int $quality = 90, string $extension = self::JPEG): bool 
+	public function saveAs(string $saveTo, int $type = self::DEFAULT, int $quality = 90, string $extension = self::JPEG): bool 
 	{
 		$this->fileinfo($saveTo, $extension);
 		$write = $this->execute($type, $quality);
@@ -511,7 +520,7 @@ class NanoImage{
 	public function replace(string $saveTo, int $quality = 90): bool 
 	{
 		$this->fileinfo($saveTo);
-		$write = $this->execute(0, $quality);
+		$write = $this->execute(self::DEFAULT, $quality);
 		return is_string($write) ? true : $write;
 	}
 	
