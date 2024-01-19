@@ -1,6 +1,6 @@
 ## Nano Image
 
-NanoImage is a simple php image resize class. It can resize image and display it in browser or save image in a directory
+NanoImage is a simple PHP image resize class. It can resize images and display them in the browser or save images in a directory
 
 ## Installation
 
@@ -45,36 +45,36 @@ Or load string containing the image data.
 $img->load($image_data);
 ```
 
-Resize image with exact width and height passed, example 200x200. To resize image using aspect ratio set the thrid parameter to true
+Resize an image with the exact width and height passed, for example, 200x200. To resize an image using the aspect ratio set the third parameter to true
 
 ```php
 $img->resize(200, 200, false||true);
 ```
 
-Once image manipulation is done display the output image on browser. Pass qaulity of image
+Once image manipulation is done, display the output image on the browser. Pass quality of the image
 
 ```php
 $img->display($quality);
 ```
 
-Save image to directory, first parameter specify the path, second default is null while quality is 90 by default
+Save an image to a directory, the first parameter specifies the path, the second sets the image naming option, and the third is image quality (90 by default)
 ```php
-$img->save(__DIR__ . "/path/to/assets/new-image.jpg", NanoImage::THUMBNAIL || null, $quality);
+$img->save(__DIR__ . "/path/to/assets/new-image.jpg", NanoImage::DEFAULT, $quality);
 ```
 
 Save image as
 
 ```php
-$img->saveAs($to, NanoImage::THUMBNAIL || NanoImage::TIMESTAMP, $quality, self::JPEG)
+$img->saveAs($to,  NanoImage::DEFAULT || NanoImage::THUMBNAIL || NanoImage::TIMESTAMP, $quality, self::JPEG)
 ```
 
-Replace existing image with new one
+Replace the existing image with a new one
 
 ```php
 $img->replace($to, $quality)
 ```
 
-Remove temp image after editing and free momory
+Remove temp image after editing and free memory
 
 ```php
 $img->remove()
