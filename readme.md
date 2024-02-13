@@ -51,6 +51,11 @@ Resize an image with the exact width and height passed, for example, 200x200. To
 $img->resize(200, 200, false||true);
 ```
 
+Blur image 
+```php
+$img->blur(20);
+```
+
 Once image manipulation is done, display the output image on the browser. Pass quality of the image
 
 ```php
