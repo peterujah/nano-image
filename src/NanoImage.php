@@ -288,16 +288,57 @@ class NanoImage{
 	* Blur image.
 	*
 	* @param int $range The blur range
+	* @param int $argument Blur argument
 	* 
 	* @return NanoImage $this class instance
 	*/
-	public function blur(int $range = 5): self
+	public function blur(int $range = 5, int $argument = 999): self
+	{
+		$size = [
+			'sm'=> ['w'=>intval($this->new_width/4), 'h'=>intval($this->new_height/4)],
+			'md'=> ['w'=>intval($this->new_width/2), 'h'=>intval($this->new_height/2)]
+		]; 
+
+		$imageSmall = imagecreatetruecolor($size['sm']['w'],$size['sm']['h']);
+
+		/* Scale by 25% and apply Gaussian blur */
+		imagecopyresampled($imageSmall, $this->imageData, 0, 0, 0, 0, $size['sm']['w'], $size['sm']['h'], $this->new_width, $this->new_height);
+
+		$imageSmall = $this->applyBlur($imageSmall, $range, $argument);
+
+		/* Scale result by 200% and blur again */
+		$imageMedium = imagecreatetruecolor($size['md']['w'], $size['md']['h']);
+		imagecopyresampled($imageMedium, $imageSmall, 0, 0, 0, 0, $size['md']['w'], $size['md']['h'], $size['sm']['w'], $size['sm']['h']);
+		imagedestroy($imageSmall);
+
+		$imageMedium = $this->applyBlur($imageMedium, 25, $argument);
+
+		/* Scale result back to original size */
+		imagecopyresampled($this->imageData, $imageMedium, 0, 0, 0, 0, $this->new_width, $this->new_height, $size['md']['w'], $size['md']['h']);
+		imagedestroy($imageMedium); 
+
+		return $this;
+	}
+
+	/**
+	* Apply blur to image.
+	*
+	* @param GdImage $image The image to blur
+	* @param int $range The blur range
+	* @param int $argument Blur argument
+	* 
+	* @return GdImage $image image resource
+	*/
+	public function applyBlur(GdImage $image, int $range = 5, int $argument = 999): GdImage 
 	{
 		for ($i = 0; $i < $range; $i++) {
-            imagefilter($this->imageData, IMG_FILTER_GAUSSIAN_BLUR);
+            imagefilter($image, IMG_FILTER_GAUSSIAN_BLUR, $argument);
         }
-		
-		return $this;
+
+		imagefilter($image, IMG_FILTER_SMOOTH, 99);
+    	imagefilter($image, IMG_FILTER_BRIGHTNESS, 10); 
+
+		return $image;
 	}
 
 
