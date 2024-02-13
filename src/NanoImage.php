@@ -284,6 +284,22 @@ class NanoImage{
 		return $this;
 	}
 
+	/**
+	* Blur image.
+	*
+	* @param int $range The blur range
+	* 
+	* @return NanoImage $this class instance
+	*/
+	public function blur(int $range = 5): self
+	{
+		for ($i = 0; $i < $range; $i++) {
+            imagefilter($this->imageData, IMG_FILTER_GAUSSIAN_BLUR);
+        }
+		
+		return $this;
+	}
+
 
 	/**
 	* Default location to save image
