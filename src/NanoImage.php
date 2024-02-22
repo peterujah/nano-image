@@ -10,7 +10,8 @@ use \GdImage;
 /**
  * Class NanoImage.
  */
-class NanoImage{
+class NanoImage
+{
 	/**
 	* Save image type of JPG
 	* @var string JPG 
@@ -73,9 +74,9 @@ class NanoImage{
 
 	/**
 	* Image resource
-	* @var GdImage $imageData 
+	* @var GdImage|bool $imageData 
 	*/
-	private $imageData = null;
+	private GdImage|bool $imageData = false;
 
 	/**
 	* Image final height
@@ -199,7 +200,7 @@ class NanoImage{
 		}
 
 		if (!$this->imageData) {
-			throw new UnsupportedImageException('Image could not be processed');
+			throw new UnsupportedImageException('Image is invalid or could not be processed');
 		}
 
 		return $this;
@@ -215,9 +216,10 @@ class NanoImage{
      */
     public function load(string $imageString): self 
     {
-        $imageData = imagecreatefromstring($imageString);
-        if ($imageData === false) {
-            throw new UnsupportedImageException('Invalid or unsupported image type');
+        $this->imageData = imagecreatefromstring($imageString);
+
+        if (!$this->imageData) {
+            throw new UnsupportedImageException('Image is invalid or could not be processed');
         }
 
         [$width, $height, $imageType] = getimagesizefromstring($imageString);
@@ -226,7 +228,6 @@ class NanoImage{
         $this->new_width = (int) $width;
         $this->new_height = (int) $height;
         $this->imageType = $imageType;
-        $this->imageData = $imageData;
 
         return $this;
     }
@@ -726,7 +727,7 @@ class NanoImage{
 	public function free(): void 
 	{
 		$this->imagePath = '';
-		$this->imageData = null;
+		$this->imageData = false;
 		$this->imageType = '';
 		$this->extension = '';
 		$this->dirname = '';
