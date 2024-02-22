@@ -171,7 +171,7 @@ class NanoImage{
 	public function open(string $imageLocation): self
 	{
 		$this->imagePath = $imageLocation;
-		[$width, $height, $imageType, $mime] = @getimagesize($this->imagePath);
+		[$width, $height, $imageType, $mime] = getimagesize($this->imagePath);
 		if (!$width || !$height || !$imageType || !$mime) {
 			throw new UnsupportedImageException('Invalid or unsupported image file');
 		}
@@ -183,16 +183,16 @@ class NanoImage{
 
 		switch ($imageType) {
 			case IMAGETYPE_JPEG:
-				$this->imageData = @imagecreatefromjpeg($this->imagePath);
+				$this->imageData = imagecreatefromjpeg($this->imagePath);
 				break;
 			case IMAGETYPE_PNG:
-				$this->imageData = @imagecreatefrompng($this->imagePath);
+				$this->imageData = imagecreatefrompng($this->imagePath);
 				break;
 			case IMAGETYPE_GIF:
-				$this->imageData = @imagecreatefromgif($this->imagePath);
+				$this->imageData = imagecreatefromgif($this->imagePath);
 				break;
 			case IMAGETYPE_WEBP:
-				$this->imageData = @imagecreatefromwebp($this->imagePath);
+				$this->imageData = imagecreatefromwebp($this->imagePath);
 				break;
 			default:
 				throw new UnsupportedImageException('Unsupported image format');
@@ -226,8 +226,8 @@ class NanoImage{
         $this->new_width = (int) $width;
         $this->new_height = (int) $height;
         $this->imageType = $imageType;
-
         $this->imageData = $imageData;
+
         return $this;
     }
 
@@ -285,7 +285,7 @@ class NanoImage{
 	*
 	* @return NanoImage $this class instance
 	*/
-	public function useAspectRatio(bool $ratio): self 
+	public function aspectRatio(bool $ratio): self 
 	{
 		$this->useRatio = $ratio;
 
@@ -303,8 +303,6 @@ class NanoImage{
 	*/
 	public function resize(int $width, int $height, bool $ratio = false): self
 	{
-		$this->isResize = true;
-
 		if ($ratio) {
 			$this->calculateAspectRatio($width, $height);
 		} else {
@@ -314,6 +312,7 @@ class NanoImage{
 
 		$this->crop_width = (int) $width;
 		$this->crop_height = (int) $height;
+		$this->isResize = true;
 		
 		return $this;
 	}
@@ -328,7 +327,6 @@ class NanoImage{
 	*/
 	private function calculateAspectRatio(int $width, int $height): void
 	{
-		$this->useRatio = true;
 		$aspectRatio = $this->width / $this->height;
 
 		if ($width / $height > $aspectRatio) {
@@ -341,6 +339,7 @@ class NanoImage{
 
 		$this->crop_width = (int) $width;
 		$this->crop_height = (int) $height;
+		$this->useRatio = true;
 	}
 
 	/**
@@ -430,7 +429,7 @@ class NanoImage{
 		if ($this->useRatio && !$this->isResize) {
 			$this->calculateAspectRatio($this->new_width, $this->new_height);
 		}
-		$imageResource = @imagecreatetruecolor($this->new_width, $this->new_height);
+		$imageResource = imagecreatetruecolor($this->new_width, $this->new_height);
 		if ($imageResource !== false) {
 			$white = imagecolorallocate($imageResource, 255, 255, 255);
 			imagefilledrectangle($imageResource, 0, 0, $this->new_width, $this->new_height, $white);
@@ -739,5 +738,7 @@ class NanoImage{
 		$this->new_height = 0;
 		$this->crop_height = 0;
 		$this->crop_width = 0;
+		$this->useRatio = false;
+		$this->isResize = false;
 	}
 }
