@@ -144,6 +144,18 @@ class NanoImage{
 	private string $finalPath = '';
 
 	/**
+	* Image aspect ration
+	* @var bool $useRatio 
+	*/
+	private bool $useRatio = false;
+
+	/**
+	* Image resize method called
+	* @var bool $isResize 
+	*/
+	private bool $isResize = false;
+
+	/**
 	 * Initialize NanoImage class
 	*/
 	public function __construct(){}
@@ -203,7 +215,7 @@ class NanoImage{
      */
     public function load(string $imageString): self 
     {
-        $imageData = @imagecreatefromstring($imageString);
+        $imageData = imagecreatefromstring($imageString);
         if ($imageData === false) {
             throw new UnsupportedImageException('Invalid or unsupported image type');
         }
@@ -246,7 +258,7 @@ class NanoImage{
 	*/
 	public function setHeight(int $height): self 
 	{
-		$this->height = $height;
+		//$this->height = $height;
 		$this->new_height = $height;
 		return $this;
 	}
@@ -260,8 +272,23 @@ class NanoImage{
 	*/
 	public function setWidth(int $width): self 
 	{
-		$this->width = $width;
+		//$this->width = $width;
 		$this->new_width = $width;
+		
+		return $this;
+	}
+
+	/**
+	* Set resize image with aspect ratio.
+	*
+	* @param bool $ratio 
+	*
+	* @return NanoImage $this class instance
+	*/
+	public function useAspectRatio(bool $ratio): self 
+	{
+		$this->useRatio = $ratio;
+
 		return $this;
 	}
 
@@ -276,12 +303,44 @@ class NanoImage{
 	*/
 	public function resize(int $width, int $height, bool $ratio = false): self
 	{
-		$this->new_width = (int) ($ratio ? ($this->width > $this->height ? ($width / $this->height) * $this->width : $width) : $width);
-		$this->new_height = (int) ($ratio ? ($this->width > $this->height ? $height : ($height / $this->width) * $this->height) : $height);
+		$this->isResize = true;
+
+		if ($ratio) {
+			$this->calculateAspectRatio($width, $height);
+		} else {
+			$this->new_width = $width;
+			$this->new_height = $height;
+		}
+
 		$this->crop_width = (int) $width;
 		$this->crop_height = (int) $height;
 		
 		return $this;
+	}
+
+	/**
+	* calculate image aspect ratio if specified.
+	*
+	* @param int $width The request width to set image
+	* @param int $height The request height to set image
+	* 
+	* @return void 
+	*/
+	private function calculateAspectRatio(int $width, int $height): void
+	{
+		$this->useRatio = true;
+		$aspectRatio = $this->width / $this->height;
+
+		if ($width / $height > $aspectRatio) {
+			$this->new_width = (int) $height * $aspectRatio;
+			$this->new_height = $height;
+		} else {
+			$this->new_width = $width;
+			$this->new_height = (int) $width / $aspectRatio;
+		}
+
+		$this->crop_width = (int) $width;
+		$this->crop_height = (int) $height;
 	}
 
 	/**
@@ -294,6 +353,10 @@ class NanoImage{
 	*/
 	public function blur(int $range = 5, int $argument = 999): self
 	{
+		if ($this->useRatio && !$this->isResize) {
+			$this->calculateAspectRatio($this->new_width, $this->new_height);
+		}
+
 		$size = [
 			'sm'=> ['w'=>intval($this->new_width/4), 'h'=>intval($this->new_height/4)],
 			'md'=> ['w'=>intval($this->new_width/2), 'h'=>intval($this->new_height/2)]
@@ -364,6 +427,9 @@ class NanoImage{
 	private function build(?string $path = null, int $quality = 100, string $extension = "jpg"): mixed
 	{
 		$write = false;
+		if ($this->useRatio && !$this->isResize) {
+			$this->calculateAspectRatio($this->new_width, $this->new_height);
+		}
 		$imageResource = @imagecreatetruecolor($this->new_width, $this->new_height);
 		if ($imageResource !== false) {
 			$white = imagecolorallocate($imageResource, 255, 255, 255);
