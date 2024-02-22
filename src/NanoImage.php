@@ -309,10 +309,10 @@ class NanoImage
 		} else {
 			$this->new_width = $width;
 			$this->new_height = $height;
+			$this->crop_width = (int) $width;
+			$this->crop_height = (int) $height;
 		}
 
-		$this->crop_width = (int) $width;
-		$this->crop_height = (int) $height;
 		$this->isResize = true;
 		
 		return $this;
@@ -331,11 +331,11 @@ class NanoImage
 		$aspectRatio = $this->width / $this->height;
 
 		if ($width / $height > $aspectRatio) {
-			$this->new_width = (int) $height * $aspectRatio;
+			$this->new_width = (int) ($height * $aspectRatio);
 			$this->new_height = $height;
 		} else {
 			$this->new_width = $width;
-			$this->new_height = (int) $width / $aspectRatio;
+			$this->new_height = (int) ($width / $aspectRatio);
 		}
 
 		$this->crop_width = (int) $width;
