@@ -5,6 +5,7 @@
  * @license     MIT public license
  */
 namespace Peterujah\NanoBlock;
+
 use Peterujah\NanoBlock\UnsupportedImageException;
 use \GdImage;
 /**
@@ -115,10 +116,18 @@ class NanoImage
 	private int $width = 0;
 
 	/**
-	* Image extension type
+	* Image mime type
+	*
 	* @var string $imageType 
 	*/
-	private string $imageType = '';
+	private string $imageMime = '';
+
+	/**
+	* Image ini type
+	*
+	* @var int $imageIntType 
+	*/
+	private int $imageIntType = 0;
 
 	/**
 	* Image extension type
@@ -172,15 +181,18 @@ class NanoImage
 	public function open(string $imageLocation): self
 	{
 		$this->imagePath = $imageLocation;
-		[$width, $height, $imageType, $mime] = getimagesize($this->imagePath);
+		$info = getimagesize($this->imagePath);
+		[$width, $height, $imageType, $mime] = $info;
 		if (!$width || !$height || !$imageType || !$mime) {
 			throw new UnsupportedImageException('Invalid or unsupported image file');
 		}
+
 		$this->height = (int) $height;
 		$this->width = (int) $width;
 		$this->new_width = (int) $width;
 		$this->new_height = (int) $height;
-		$this->imageType = $imageType;
+		$this->imageIntType = $imageType;
+		$this->imageMime = $info['mime'];
 
 		switch ($imageType) {
 			case IMAGETYPE_JPEG:
@@ -222,12 +234,15 @@ class NanoImage
             throw new UnsupportedImageException('Image is invalid or could not be processed');
         }
 
-        [$width, $height, $imageType] = getimagesizefromstring($imageString);
+		$info = getimagesizefromstring($imageString);
+        [$width, $height, $imageType] = $info;
+
         $this->height = (int) $height;
         $this->width = (int) $width;
         $this->new_width = (int) $width;
         $this->new_height = (int) $height;
-        $this->imageType = $imageType;
+        $this->imageMime = $info['mime'];
+		$this->imageIntType = $imageType;
 
         return $this;
     }
@@ -259,7 +274,6 @@ class NanoImage
 	*/
 	public function setHeight(int $height): self 
 	{
-		//$this->height = $height;
 		$this->new_height = $height;
 		return $this;
 	}
@@ -273,9 +287,7 @@ class NanoImage
 	*/
 	public function setWidth(int $width): self 
 	{
-		//$this->width = $width;
 		$this->new_width = $width;
-		
 		return $this;
 	}
 
@@ -420,11 +432,10 @@ class NanoImage
 	*
 	* @param string $path Optional path, set to null to ignore saving image or supply path to save a copy
 	* @param int $quality Set image quality
-	* @param int $extension Set image extension type
 	*
 	* @return string|bool string resource or bool.
 	*/
-	private function build(?string $path = null, int $quality = 100, string $extension = "jpg"): mixed
+	private function build(?string $path = null, int $quality = 100): string|bool
 	{
 		$write = false;
 		if ($this->useRatio && !$this->isResize) {
@@ -435,7 +446,7 @@ class NanoImage
 			$white = imagecolorallocate($imageResource, 255, 255, 255);
 			imagefilledrectangle($imageResource, 0, 0, $this->new_width, $this->new_height, $white);
 			if (imagecopyresampled($imageResource, $this->imageData, 0, 0, 0, 0, $this->new_width, $this->new_height, $this->width, $this->height)) {
-				$write = $this->writeImage($imageResource, $path, $extension, $quality);
+				$write = $this->writeImage($imageResource, $path, $quality);
 			}
 			imagedestroy($imageResource);
 		}
@@ -446,31 +457,36 @@ class NanoImage
 	/**
 	* Save image as specified type, quality and size 
 	*
-	* @param GdImage $image image resource 
-	* @param string|null $file image new file  
-	* @param string|null $extension image extension 
-	* @param int $quality image quality 
+	* @param GdImage $image image resource.
+	* @param string|null $file image new file.
+	* @param int $quality image quality.
 	*
 	* @return string|bool image resource identifier or bool
 	*/
-	private function writeImage(GdImage $image, ?string $file = null, ?string $extension = "jpg", int $quality = 100): mixed
+	private function writeImage(GdImage $image, ?string $file = null, int $quality = 100): string|bool
 	{
 		$result = false;
-		if ($extension == self::PNG) {
-			$result = imagepng($image, $file, $quality);
-		} else if ($extension == self::GIF) {
-			$result = imagegif($image, $file);
-		} else if ($extension == self::WEBP) {
-			$result = imagewebp($image, $file, $quality);
-		} else if ($extension == self::BMP) {
-			if (function_exists('imagebmp')) {
-				$result = imagebmp($image, $file);
-			} else {
-				$result = $this->image_bmp($image, $file);
-			}
-		} else {
-			$result = imagejpeg($image, $file, $quality);
+		switch ($this->imageIntType) {
+			case IMAGETYPE_BMP:
+				if (function_exists('imagebmp')) {
+					$result = imagebmp($image, $file);
+				} else {
+					$result = $this->image_bmp($image, $file);
+				}
+				break;
+			case IMAGETYPE_PNG:
+				$result = imagepng($image, $file, $quality);
+				break;
+			case IMAGETYPE_GIF:
+				$result = imagegif($image, $file);
+				break;
+			case IMAGETYPE_WEBP:
+				$result = imagewebp($image, $file, $quality);
+				break;
+			default:
+				$result = imagejpeg($image, $file, $quality);
 		}
+		
 		imagedestroy($this->imageData);
 		
 		return $result;
@@ -484,7 +500,7 @@ class NanoImage
 	*/
 	public function removeExif(string $saveTo): bool 
 	{
-		$write = $this->writeImage($this->imageData, $saveTo, $this->imageType, 100);
+		$write = $this->writeImage($this->imageData, $saveTo, 100);
 		return is_string($write) ? true : $write;
 	}
 
@@ -518,8 +534,8 @@ class NanoImage
 		$exifThumbnail = exif_thumbnail($this->imagePath, $width, $height, $type);
 		$data['Thumbnail'] = $exifThumbnail;
 		exif_write_data($data, $saveTo);
-		//$this->writeImage($this->imageData, $to, $this->imageType, 100);
-		$write = $this->writeImage($this->imageData, $saveTo, $this->imageType, 100);
+
+		$write = $this->writeImage($this->imageData, $saveTo, 100);
 
 		return is_string($write) ? true : $write;
 	}
@@ -533,12 +549,24 @@ class NanoImage
 	*/
 	public function display(int $quality = 100): void 
 	{
-		$extension = strtolower(image_type_to_extension($this->imageType, false));
-		header('Content-Type: ' . $this->imageType);
-		$write = $this->build(null, $quality, $extension);
+		$write = $this->get($quality);
+		header('Content-Type: ' . $this->imageMime);
+
 		if(is_string($write)){
 			echo $write;
 		}
+	}
+
+	/**
+	* Display image in browser.
+	*
+	* @param int $quality The require quality to set image
+	*
+	* @return void
+	*/
+	public function get(int $quality = 100): string|bool 
+	{
+		return $this->build(null, $quality);
 	}
 
 	/**
@@ -572,7 +600,7 @@ class NanoImage
 				unlink($this->finalPath);
 		    }
 		}
-		return $this->build($this->finalPath, $quality, $this->extension);
+		return $this->build($this->finalPath, $quality);
 	}
 
 	/**
@@ -661,7 +689,7 @@ class NanoImage
 	*
 	* @return string|bool  true or false
 	*/
-	public function image_bmp(GdImage $image, ?string $file = null): mixed
+	public function image_bmp(GdImage $image, ?string $file = null): string|bool
 	{
 		if ($image === null) {
 			return false;
@@ -728,7 +756,8 @@ class NanoImage
 	{
 		$this->imagePath = '';
 		$this->imageData = false;
-		$this->imageType = '';
+		$this->imageMime = '';
+		$this->imageIntType = 0;
 		$this->extension = '';
 		$this->dirname = '';
 		$this->filename = '';
