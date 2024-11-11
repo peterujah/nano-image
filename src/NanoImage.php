@@ -688,6 +688,7 @@ class NanoImage
 	private function writeImage(GdImage $image, ?string $file = null, int $quality = 100): bool
 	{
 		$result = false;
+		$quality = max(0, min(100, $quality));
 		switch ($this->imageIntType) {
 			case IMAGETYPE_BMP:
 				$result = function_exists('imagebmp') 
@@ -695,7 +696,7 @@ class NanoImage
 					: $this->image_bmp($image, $file);
 				break;
 			case IMAGETYPE_PNG:
-				$result = imagepng($image, $file, $quality);
+				$result = imagepng($image, $file, min(9, (int)($quality / 10)));
 				break;
 			case IMAGETYPE_GIF:
 				$result = imagegif($image, $file);
