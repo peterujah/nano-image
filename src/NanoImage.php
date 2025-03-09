@@ -91,6 +91,13 @@ class NanoImage
 	private GdImage|bool $imageData = false;
 
 	/**
+	 * Apply filters to image.
+	 * 
+	 * @var array $filters
+	 */
+	private array $filters = [];
+
+	/**
 	 * Final image height.
 	 *
 	 * @var int $new_height 
@@ -198,7 +205,7 @@ class NanoImage
 	 *
 	 * @param string $imageLocation Path or URL to the image.
 	 * 
-	 * @return self The current class instance.
+	 * @return self Return the image class instance.
 	 * @throws InvalidArgumentException If the image is not valid or unsupported.
 	 */
 	public function open(string $imageLocation): self
@@ -246,7 +253,7 @@ class NanoImage
 	 *
 	 * @param string $imageString The image data as a string.
 	 * 
-	 * @return self The current class instance.
+	 * @return self Return the image class instance.
 	 * @throws UnsupportedImageException If the image type is unsupported.
 	 */
 	public function load(string $imageString): self 
@@ -325,7 +332,7 @@ class NanoImage
 	 *
 	 * @param int $height The desired height for the image.
 	 * 
-	 * @return self The current class instance.
+	 * @return self Return the image class instance.
 	 */
 	public function setHeight(int $height): self
 	{
@@ -338,7 +345,7 @@ class NanoImage
 	 *
 	 * @param int $width The desired width for the image.
 	 * 
-	 * @return self The current class instance.
+	 * @return self Return the image class instance.
 	 */
 	public function setWidth(int $width): self
 	{
@@ -351,7 +358,7 @@ class NanoImage
 	 *
 	 * @param bool $ratio Whether to maintain aspect ratio (true or false).
 	 * 
-	 * @return self The current class instance.
+	 * @return self Return the image class instance.
 	 */
 	public function aspectRatio(bool $ratio): self
 	{
@@ -366,20 +373,75 @@ class NanoImage
 	 * @param int $height The desired height for resizing.
 	 * @param bool $ratio Whether to auto-calculate aspect ratio.
 	 * 
-	 * @return self The current class instance.
+	 * @return self Return the image class instance.
 	 */
 	public function resize(int $width, int $height, bool $ratio = false): self
 	{
 		if ($ratio) {
 			$this->calculateAspectRatio($width, $height);
-		} else {
-			$this->new_width = $width;
-			$this->new_height = $height;
-			$this->crop_width = (int) $width;
-			$this->crop_height = (int) $height;
+			$this->isResize = true;
+			return $this;
 		}
 
+		$this->new_width = $width;
+		$this->new_height = $height;
+		$this->crop_width = (int) $width;
+		$this->crop_height = (int) $height;
 		$this->isResize = true;
+		
+		return $this;
+	}
+
+	/**
+	 * Adds a single filter to be applied to the image.
+	 *
+	 * This method allows you to apply a single image filter with optional parameters.
+	 * Filters should be one of the predefined `IMG_FILTER_*` constants.
+	 * 
+	 * @param int   $filter The image filter constant (e.g., `IMG_FILTER_GRAYSCALE`).
+	 * @param mixed ...$args Optional additional parameters for certain filters.
+	 * 
+	 * @return self Return the image class instance.
+	 *
+	 * @example - Apply a single image filter.
+	 * ```php
+	 * $image->filter(IMG_FILTER_BRIGHTNESS, 50);
+	 * $image->filter(IMG_FILTER_CONTRAST, -20);
+	 * ```
+	 */
+	public function filter(int $filter, ...$args): self
+	{
+		$this->filters[] = array_merge([$filter], $args);
+		return $this;
+	}
+
+	/**
+	 * Adds multiple filters to be applied to the image.
+	 *
+	 * This method allows you to apply multiple filters at once. Each filter should be
+	 * an array where the first element is the `IMG_FILTER_*` constant, followed by any
+	 * additional parameters the filter requires.
+	 * 
+	 * @param array $filters An array of filters, where each filter is an array containing
+	 *                       the filter constant and its optional parameters.
+	 * 
+	 * @return self Return the image class instance.
+	 *
+	 * @example - Applying filters.
+	 * 
+	 * ```php
+	 * $image->filters([
+	 *     [IMG_FILTER_BRIGHTNESS, 20],
+	 *     [IMG_FILTER_GAUSSIAN_BLUR],
+	 *     [IMG_FILTER_COLORIZE, 100, 50, 0], // Add a color overlay
+	 * ]);
+	 * ```
+	 */
+	public function filters(array $filters): self
+	{
+		foreach ($filters as $filter) {
+			$this->filters[] = (array) $filter;
+		}
 		
 		return $this;
 	}
@@ -576,7 +638,7 @@ class NanoImage
 	/**
 	 * Remove original image.
 	 *
-	 * @return self The current class instance.
+	 * @return self Return the image class instance.
 	 */
 	public function remove(): self 
 	{
@@ -605,6 +667,7 @@ class NanoImage
 		$this->finalPath = '';
 		$this->height = 0;
 		$this->width = 0;
+		$this->filters = [];
 		$this->new_width = 0;
 		$this->new_height = 0;
 		$this->crop_height = 0;
@@ -644,7 +707,7 @@ class NanoImage
 	 */
 	private function defaultLocation(): string
 	{
-		return __DIR__ . DIRECTORY_SEPARATOR . "images" . DIRECTORY_SEPARATOR . "nano-image" . self::JPEG;
+		return __DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'nano-image' . self::JPEG;
 	}
 
 	/**
@@ -666,14 +729,46 @@ class NanoImage
 		if ($imageResource !== false) {
 			$white = imagecolorallocate($imageResource, 255, 255, 255);
 			imagefilledrectangle($imageResource, 0, 0, $this->new_width, $this->new_height, $white);
+			
+			
 			if (imagecopyresampled($imageResource, $this->imageData, 0, 0, 0, 0, $this->new_width, $this->new_height, $this->width, $this->height)) {
-				$write = $this->writeImage($imageResource, $path, $quality);
+				$write = $this->writeImage(
+					$this->applyFilters($imageResource),
+					$path, 
+					$quality
+				);
 			}
 
 			imagedestroy($imageResource);
 		}
 
 		return $write;
+	}
+
+	/**
+	 * Applies all queued image filters to the given GD image resource.
+	 *
+	 * This method iterates through the stored filters and applies them one by one.
+	 * Each filter is either an array (with parameters) or a single constant.
+	 *
+	 * @param GdImage $image The GD image resource to apply filters to.
+	 * @param int $applied (reference) The count of successfully applied filters.
+	 * 
+	 * @return GdImage The modified GD image with applied filters.
+	 */
+	private function applyFilters(GdImage $image, int &$applied = 0): GdImage 
+	{
+		foreach ($this->filters as $filter) {
+			$ok = is_array($filter) 
+				? imagefilter($image, ...$filter)
+				: imagefilter($image, $filter);
+
+			if($ok){
+				$applied++;
+			}
+		}
+
+		return $image;
 	}
 	
 	/**
