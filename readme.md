@@ -28,6 +28,25 @@ try{
 }
 ```
 
+
+---
+
+**Applying Filters**
+```php
+$image = new NanoImage();
+$image->filter(IMG_FILTER_GRAYSCALE)
+      ->filter(IMG_FILTER_BRIGHTNESS, 30)
+      ->get(90);
+```
+Or:
+```php
+$image->filters([
+    [IMG_FILTER_CONTRAST, -50],
+    [IMG_FILTER_COLORIZE, 100, 50, 0], // Add color overlay
+])->get();
+```
+---
+
 ```php
 $img = new Peterujah\NanoBlock\NanoImage();
 ```
