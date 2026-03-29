@@ -211,8 +211,15 @@ class NanoImage
 	public function open(string $imageLocation): self
 	{
 		$this->imagePath = $imageLocation;
-		$info = getimagesize($this->imagePath);
-		[$width, $height, $imageType, $mime] = $info;
+		$info = null;
+		$size = getimagesize($this->imagePath, $info);
+
+		if($size === false){
+			throw new UnsupportedImageException('File is not a valid image');
+		}
+
+		[$width, $height, $imageType, $mime] = $size;
+
 		if (!$width || !$height || !$imageType || !$mime) {
 			throw new UnsupportedImageException('Invalid or unsupported image file');
 		}
@@ -222,10 +229,11 @@ class NanoImage
 		$this->new_width = (int) $width;
 		$this->new_height = (int) $height;
 		$this->imageIntType = $imageType;
-		$this->imageMime = $info['mime'];
+		$this->imageMime = $size['mime'];
 
 		switch ($imageType) {
 			case IMAGETYPE_JPEG:
+			case IMAGETYPE_JPEG2000:
 				$this->imageData = imagecreatefromjpeg($this->imagePath);
 				break;
 			case IMAGETYPE_PNG:
@@ -236,6 +244,13 @@ class NanoImage
 				break;
 			case IMAGETYPE_WEBP:
 				$this->imageData = imagecreatefromwebp($this->imagePath);
+				break;
+			case IMAGETYPE_AVIF:
+				if (!function_exists('imagecreatefromavif')) {
+					throw new UnsupportedImageException('AVIF format is not supported on this server');
+				}
+				
+				$this->imageData = imagecreatefromavif($this->imagePath);
 				break;
 			default:
 				throw new UnsupportedImageException('Unsupported image format');
@@ -265,6 +280,11 @@ class NanoImage
 		}
 
 		$info = getimagesizefromstring($imageString);
+
+		if ($info === false) {
+			throw new UnsupportedImageException('File is not a valid image');
+		}
+
 		[$width, $height, $imageType] = $info;
 
 		$this->height = (int) $height;
@@ -476,13 +496,13 @@ class NanoImage
 		/* Scale result by 200% and blur again */
 		$imageMedium = imagecreatetruecolor($size['md']['w'], $size['md']['h']);
 		imagecopyresampled($imageMedium, $imageSmall, 0, 0, 0, 0, $size['md']['w'], $size['md']['h'], $size['sm']['w'], $size['sm']['h']);
-		imagedestroy($imageSmall);
+		@imagedestroy($imageSmall);
 
 		$imageMedium = $this->applyBlur($imageMedium, 25, $argument);
 
 		/* Scale result back to original size */
 		imagecopyresampled($this->imageData, $imageMedium, 0, 0, 0, 0, $this->new_width, $this->new_height, $size['md']['w'], $size['md']['h']);
-		imagedestroy($imageMedium); 
+		@imagedestroy($imageMedium); 
 
 		return $this;
 	}
@@ -588,7 +608,9 @@ class NanoImage
 	 * 
 	 * 
 	 * @return bool True on success, false on failure.
-	 * > **Note:** the `$type` is used to specify how image should be saved, `NanoImage::DEFAULT` will delete existing image from directory
+	 * > **Note:** 
+	 * > The `$type` is used to specify how image should be saved, `NanoImage::DEFAULT` 
+	 * > will delete existing image from directory
 	 * > While `NanoImage::THUMBNAIL` will rename image using height and width
 	 */
 	public function save(string $saveTo, int $type = self::DEFAULT, int $quality = 100): bool 
@@ -607,7 +629,9 @@ class NanoImage
 	 * 
 	 * @return bool True on success, false on failure.
 	 * 
-	 * > **Note:** the `$type` is used to specify how image should be saved, `NanoImage::DEFAULT` will delete existing image from directory
+	 * > **Note:** 
+	 * > The `$type` is used to specify how image should be saved, `NanoImage::DEFAULT` 
+	 * >will delete existing image from directory
 	 * > While `NanoImage::THUMBNAIL` will rename image using height and width
 	 */
 	public function saveAs(
@@ -654,7 +678,7 @@ class NanoImage
 	public function free(): void 
 	{
 		if ($this->imageData) {
-			imagedestroy($this->imageData);
+			@imagedestroy($this->imageData);
 		}
 
 		$this->imagePath = '';
@@ -739,7 +763,7 @@ class NanoImage
 				);
 			}
 
-			imagedestroy($imageResource);
+			@imagedestroy($imageResource);
 		}
 
 		return $write;
@@ -803,7 +827,7 @@ class NanoImage
 				$result = imagejpeg($image, $file, $quality);
 		}
 		
-		imagedestroy($this->imageData);
+		@imagedestroy($this->imageData);
 		
 		return $result;
 	}
@@ -935,7 +959,7 @@ class NanoImage
 
 		// Free memory of scaled image
 		if($quality !== -1){
-			imagedestroy($image);
+			@imagedestroy($image);
 		}
 
 		if ($file === null) {
