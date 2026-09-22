@@ -4,8 +4,10 @@
  * @copyright   Copyright (c), 2019 Peter(NG) peterujah
  * @license     MIT public license
  */
-namespace Peterujah\NanoBlock;
+namespace Peterujah\Media;
+
 use \Exception;
+
 class UnsupportedImageException extends Exception
 {
     public function __construct(
