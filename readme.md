@@ -12,6 +12,8 @@ composer require peterujah/nano-image
 ## Basic Usage
 
 ```php
+use Peterujah\Media\NanoImage;
+
 $image = new NanoImage();
 try{
   $image = $imagine->open("path/to/save/edit-image-size.jpg");
@@ -48,7 +50,7 @@ $image->filters([
 ---
 
 ```php
-$img = new Peterujah\NanoBlock\NanoImage();
+$img = new Peterujah\Media\NanoImage();
 ```
 Initialize nano image class for use
 
