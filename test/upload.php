@@ -1,8 +1,9 @@
 <?php
 require_once __DIR__ . "/autoload.php";
 
-use Peterujah\NanoBlock\NanoImage;
-use Peterujah\NanoBlock\UnsupportedImageException;
+use Peterujah\Media\NanoImage;
+use Peterujah\Media\UnsupportedImageException;
+
 if(isset($_FILES['image'])){
     $ImageTemp = $_FILES['image']['tmp_name'];
     $fileName = 'old-image.jpg'; 
