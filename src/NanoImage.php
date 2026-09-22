@@ -6,9 +6,9 @@
  * @copyright   Copyright (c), 2019 Peter(NG) peterujah
  * @license     MIT public license
  */
-namespace Peterujah\NanoBlock;
+namespace Peterujah\Media;
 
-use Peterujah\NanoBlock\UnsupportedImageException;
+use Peterujah\Media\UnsupportedImageException;
 use \GdImage;
 
 class NanoImage
