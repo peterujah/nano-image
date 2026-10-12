@@ -693,6 +693,52 @@ class NanoImage
 	}
 
 	/**
+	 * Encode the image and return its contents as a string.
+	 *
+	 * @param int $quality The image encoding quality, from 0 to 100.
+	 *
+	 * @return string Returns the encoded image contents, or an empty string
+	 *                if encoding fails.
+	 */
+	public function toString(int $quality = 100): string
+	{
+		$bufferLevel = ob_get_level();
+
+		if (!ob_start()) {
+			return '';
+		}
+
+		try {
+			$success = $this->build(null, $quality);
+			$output = ob_get_contents();
+
+			if ($success && is_string($output) && $output !== '') {
+				return $output;
+			}
+		} finally {
+			self::clearOutput($bufferLevel);
+		}
+
+		return '';
+	}
+
+	/**
+	 * Clear output buffers created above the specified buffer level.
+	 *
+	 * @param int $bufferLevel The output buffer level to preserve.
+	 *
+	 * @return void
+	 */
+	private static function clearOutput(int $bufferLevel = 0): void
+	{
+		while (ob_get_level() > $bufferLevel) {
+			if (!ob_end_clean()) {
+				break;
+			}
+		}
+	}
+
+	/**
 	 * Save the image to the specified path with optional formatting and quality.
 	 *
 	 * @param string $saveTo The path where the image should be saved.
