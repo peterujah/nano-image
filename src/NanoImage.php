@@ -202,7 +202,7 @@ class NanoImage
 	 */
 	public function __construct(?string $source = null)
 	{
-		if($source === null && $source === ''){
+		if($source === null || $source === ''){
 			return;
 		}
 
