@@ -218,69 +218,67 @@ class NanoImage
 	 * Load an image from a file path or URL.
 	 *
 	 * @param string $filename Path or URL to the image.
-	 * 
-	 * @return self Return the image class instance.
-	 * @throws UnsupportedImageException If the image is not valid or unsupported.
+	 *
+	 * @return self Returns the image instance.
+	 *
+	 * @throws UnsupportedImageException If the image is invalid or unsupported.
 	 */
 	public function open(string $filename): self
 	{
-		$info = null;
-		$size = getimagesize($filename, $info);
+		$size = @getimagesize($filename);
 
-		if($size === false){
-			throw new UnsupportedImageException("Failed to load image from: {$filename}.");
-		}
-
-		$width  = (int) ($size[0] ?? 0);
-		$height = (int) ($size[1] ?? 0);
-		$type   = (int) ($size[2] ?? 0);
-
-		if ($width <= 0 || $height <= 0) {
-			throw new UnsupportedImageException('Invalid or unsupported image file');
-		}
-
-		switch ($type) {
-			case IMAGETYPE_JPEG:
-			case IMAGETYPE_JPEG2000:
-				$this->imageData = imagecreatefromjpeg($filename);
-				break;
-			case IMAGETYPE_PNG:
-				$this->imageData = imagecreatefrompng($filename);
-				break;
-			case IMAGETYPE_GIF:
-				$this->imageData = imagecreatefromgif($filename);
-				break;
-			case IMAGETYPE_WEBP:
-				$this->imageData = imagecreatefromwebp($filename);
-				break;
-			case IMAGETYPE_AVIF:
-				if (!function_exists('imagecreatefromavif')) {
-					throw new UnsupportedImageException(
-						'AVIF image extention not supported.'
-					);
-				}
-				
-				$this->imageData = imagecreatefromavif($filename);
-				break;
-			default:
-				throw new UnsupportedImageException(
-					"Unsupported image type: {$type}, {$size['mime']}."
-				);
-		}
-
-		if (!$this->imageData instanceof GdImage) {
+		if ($size === false) {
 			throw new UnsupportedImageException(
-				"Filed to create image from: {$filename}"
+				"Failed to load image from: {$filename}."
 			);
 		}
 
+		$width = (int) ($size[0] ?? 0);
+		$height = (int) ($size[1] ?? 0);
+		$type = (int) ($size[2] ?? 0);
+		$mime = (string) ($size['mime'] ?? '');
+
+		if ($width <= 0 || $height <= 0) {
+			throw new UnsupportedImageException(
+				'Invalid or unsupported image dimensions.'
+			);
+		}
+
+		switch ($type) {
+			case IMAGETYPE_JPEG: $decoder = 'imagecreatefromjpeg'; break;
+			case IMAGETYPE_PNG:  $decoder = 'imagecreatefrompng';  break;
+			case IMAGETYPE_GIF:  $decoder = 'imagecreatefromgif';  break;
+			case IMAGETYPE_WEBP: $decoder = 'imagecreatefromwebp'; break;
+			case IMAGETYPE_AVIF: $decoder = 'imagecreatefromavif'; break;
+			default: $decoder = null;
+		};
+
+		if ($decoder === null || !function_exists($decoder)) {
+			throw new UnsupportedImageException(
+				"Unsupported image type: {$type}, {$mime}."
+			);
+		}
+
+		$image = @$decoder($filename);
+
+		if (!$image instanceof GdImage) {
+			throw new UnsupportedImageException(
+				"Failed to decode image from: {$filename}."
+			);
+		}
+
+		if ($this->imageData instanceof GdImage) {
+			$this->destroy($this->imageData);
+		}
+
+		$this->imageData = $image;
 		$this->imagePath = $filename;
-		$this->height = $height;
 		$this->width = $width;
+		$this->height = $height;
 		$this->newWidth = $width;
 		$this->newHeight = $height;
 		$this->imageIntType = $type;
-		$this->imageMime = $size['mime'];
+		$this->imageMime = $mime;
 
 		return $this;
 	}
@@ -905,63 +903,84 @@ class NanoImage
 			$this->calculateAspectRatio($this->newWidth, $this->newHeight);
 		}
 
+		if (
+			$this->newWidth <= 0
+			|| $this->newHeight <= 0
+			|| $this->width <= 0
+			|| $this->height <= 0
+		) {
+			return false;
+		}
+
 		$image = imagecreatetruecolor($this->newWidth, $this->newHeight);
 
 		if ($image === false) {
 			return false;
 		}
 
-		try{
+		try {
 			$white = imagecolorallocate($image, 255, 255, 255);
 
-			if($white === false){
+			if (
+				$white === false ||
+				!imagefilledrectangle(
+					$image,
+					0,
+					0,
+					$this->newWidth - 1,
+					$this->newHeight - 1,
+					$white
+				)
+			) {
 				return false;
 			}
 
-			imagefilledrectangle($image, 0, 0, $this->newWidth, $this->newHeight, $white);
-			
-			if (imagecopyresampled(
-				$image, 
-				$this->imageData, 
-				0, 0, 0, 0, 
-				$this->newWidth, 
-				$this->newHeight, 
-				$this->width, 
+			if (!imagecopyresampled(
+				$image,
+				$this->imageData,
+				0,
+				0,
+				0,
+				0,
+				$this->newWidth,
+				$this->newHeight,
+				$this->width,
 				$this->height
 			)) {
-				return $this->writeImage(
-					$this->applyFilters($image),
-					$path, 
-					$quality
-				);
+				return false;
 			}
+			
+			$filtered = $this->applyFilters($image);
+
+			if (!$filtered instanceof GdImage) {
+				return false;
+			}
+
+			return $this->writeImage($filtered, $path, $quality);
 		} finally {
 			$this->destroy($image);
-			$image = null;
 		}
-
-		return false;
 	}
 
 	/**
-	 * Applies all queued image filters to the given GD image resource.
+	 * Applies all queued image filters to the given GD image.
 	 *
-	 * This method iterates through the stored filters and applies them one by one.
-	 * Each filter is either an array (with parameters) or a single constant.
+	 * Each filter can be a filter constant or an array containing the
+	 * filter constant and its optional arguments.
 	 *
-	 * @param GdImage $image The GD image resource to apply filters to.
-	 * @param int $applied (reference) The count of successfully applied filters.
-	 * 
-	 * @return GdImage The modified GD image with applied filters.
+	 * @param GdImage $image The image to modify.
+	 * @param int $applied Number of successfully applied filters, updated by reference.
+	 *
+	 * @return GdImage Returns the modified image.
 	 */
-	private function applyFilters(GdImage $image, int &$applied = 0): GdImage 
+	private function applyFilters(GdImage $image, int &$applied = 0): GdImage
 	{
 		foreach ($this->filters as $filter) {
-			$ok = is_array($filter) 
+			$result = is_array($filter)
 				? imagefilter($image, ...$filter)
 				: imagefilter($image, $filter);
 
-			if($ok){
+			if ($result) {
 				$applied++;
 			}
 		}
@@ -970,13 +989,13 @@ class NanoImage
 	}
 	
 	/**
-	 * Save image as specified type, quality and size 
+	 * Encode and save an image using its original format.
 	 *
-	 * @param GdImage $image image resource.
-	 * @param string|null $file image new file.
-	 * @param int $quality image quality.
+	 * @param GdImage $image The image to encode.
+	 * @param string|null $file Optional destination path. When null, output is sent directly.
+	 * @param int $quality Image quality, from 0 to 100.
 	 *
-	 * @return bool Return true if image was successfully created, otherwise false.
+	 * @return bool Returns true if the image was encoded successfully, otherwise false.
 	 */
 	private function writeImage(GdImage $image, ?string $file = null, int $quality = 100): bool
 	{
