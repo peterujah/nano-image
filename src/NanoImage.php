@@ -8,8 +8,8 @@
  */
 namespace Peterujah\Media;
 
-use Peterujah\Media\UnsupportedImageException;
 use \GdImage;
+use Peterujah\Media\UnsupportedImageException;
 
 class NanoImage
 {
@@ -100,30 +100,30 @@ class NanoImage
 	/**
 	 * Final image height.
 	 *
-	 * @var int $new_height 
+	 * @var int $newHeight 
 	 */
-	private int $new_height = 0;
+	private int $newHeight = 0;
 
 	/**
 	 * Final image width.
 	 *
-	 * @var int $new_width 
+	 * @var int $newWidth 
 	 */
-	private int $new_width = 0;
+	private int $newWidth = 0;
 
 	/**
 	 * Cropped image width.
 	 *
-	 * @var int $crop_width 
+	 * @var int $cropWidth 
 	 */
-	private int $crop_width = 0;
+	private int $cropWidth = 0;
 
 	/**
 	 * Cropped image height.
 	 *
-	 * @var int $crop_height 
+	 * @var int $cropHeight 
 	 */
-	private int $crop_height = 0;
+	private int $cropHeight = 0;
 
 	/**
 	 * Original image height.
@@ -196,69 +196,91 @@ class NanoImage
 	private bool $isResize = false;
 
 	/**
-	 * Initialize the NanoImage class.
+	 * Initialize the Nano Image class.
+	 * 
+	 * @param string|null $source Image source, filename or data.
 	 */
-	public function __construct(){}
+	public function __construct(?string $source = null)
+	{
+		if($source === null && $source === ''){
+			return;
+		}
+
+		if(is_file($source)){
+			$this->open($source);
+			return;
+		}
+
+		$this->load($source);
+	}
 
 	/**
 	 * Load an image from a file path or URL.
 	 *
-	 * @param string $imageLocation Path or URL to the image.
+	 * @param string $filename Path or URL to the image.
 	 * 
 	 * @return self Return the image class instance.
-	 * @throws InvalidArgumentException If the image is not valid or unsupported.
+	 * @throws UnsupportedImageException If the image is not valid or unsupported.
 	 */
-	public function open(string $imageLocation): self
+	public function open(string $filename): self
 	{
-		$this->imagePath = $imageLocation;
 		$info = null;
-		$size = getimagesize($this->imagePath, $info);
+		$size = getimagesize($filename, $info);
 
 		if($size === false){
-			throw new UnsupportedImageException('File is not a valid image');
+			throw new UnsupportedImageException("Failed to load image from: {$filename}.");
 		}
 
-		[$width, $height, $imageType, $mime] = $size;
+		$width  = (int) ($size[0] ?? 0);
+		$height = (int) ($size[1] ?? 0);
+		$type   = (int) ($size[2] ?? 0);
 
-		if (!$width || !$height || !$imageType || !$mime) {
+		if ($width <= 0 || $height <= 0) {
 			throw new UnsupportedImageException('Invalid or unsupported image file');
 		}
 
-		$this->height = (int) $height;
-		$this->width = (int) $width;
-		$this->new_width = (int) $width;
-		$this->new_height = (int) $height;
-		$this->imageIntType = $imageType;
-		$this->imageMime = $size['mime'];
-
-		switch ($imageType) {
+		switch ($type) {
 			case IMAGETYPE_JPEG:
 			case IMAGETYPE_JPEG2000:
-				$this->imageData = imagecreatefromjpeg($this->imagePath);
+				$this->imageData = imagecreatefromjpeg($filename);
 				break;
 			case IMAGETYPE_PNG:
-				$this->imageData = imagecreatefrompng($this->imagePath);
+				$this->imageData = imagecreatefrompng($filename);
 				break;
 			case IMAGETYPE_GIF:
-				$this->imageData = imagecreatefromgif($this->imagePath);
+				$this->imageData = imagecreatefromgif($filename);
 				break;
 			case IMAGETYPE_WEBP:
-				$this->imageData = imagecreatefromwebp($this->imagePath);
+				$this->imageData = imagecreatefromwebp($filename);
 				break;
 			case IMAGETYPE_AVIF:
 				if (!function_exists('imagecreatefromavif')) {
-					throw new UnsupportedImageException('AVIF format is not supported on this server');
+					throw new UnsupportedImageException(
+						'AVIF image extention not supported.'
+					);
 				}
 				
-				$this->imageData = imagecreatefromavif($this->imagePath);
+				$this->imageData = imagecreatefromavif($filename);
 				break;
 			default:
-				throw new UnsupportedImageException('Unsupported image format');
+				throw new UnsupportedImageException(
+					"Unsupported image type: {$type}, {$size['mime']}."
+				);
 		}
 
-		if (!$this->imageData) {
-			throw new UnsupportedImageException('Image is invalid or could not be processed');
+		if (!$this->imageData instanceof GdImage) {
+			throw new UnsupportedImageException(
+				"Filed to create image from: {$filename}"
+			);
 		}
+
+		$this->imagePath = $filename;
+		$this->height = $height;
+		$this->width = $width;
+		$this->newWidth = $width;
+		$this->newHeight = $height;
+		$this->imageIntType = $type;
+		$this->imageMime = $size['mime'];
 
 		return $this;
 	}
@@ -266,31 +288,37 @@ class NanoImage
 	/**
 	 * Load an image from a string.
 	 *
-	 * @param string $imageString The image data as a string.
+	 * @param string $data The image data as a string.
 	 * 
 	 * @return self Return the image class instance.
 	 * @throws UnsupportedImageException If the image type is unsupported.
 	 */
-	public function load(string $imageString): self 
+	public function load(string $data): self 
 	{
-		$this->imageData = imagecreatefromstring($imageString);
-
-		if (!$this->imageData) {
-			throw new UnsupportedImageException('Image is invalid or could not be processed');
+		if($data === ''){
+			throw new UnsupportedImageException('Image data cannot be an empty string.');
 		}
 
-		$info = getimagesizefromstring($imageString);
+		$this->imageData = imagecreatefromstring($data);
+
+		if ($this->imageData === false) {
+			throw new UnsupportedImageException(
+				'Failed to create image from data'
+			);
+		}
+
+		$info = getimagesizefromstring($data);
 
 		if ($info === false) {
-			throw new UnsupportedImageException('File is not a valid image');
+			throw new UnsupportedImageException('Error while processing image data');
 		}
 
 		[$width, $height, $imageType] = $info;
 
 		$this->height = (int) $height;
 		$this->width = (int) $width;
-		$this->new_width = (int) $width;
-		$this->new_height = (int) $height;
+		$this->newWidth = (int) $width;
+		$this->newHeight = (int) $height;
 		$this->imageMime = $info['mime'];
 		$this->imageIntType = $imageType;
 
@@ -356,7 +384,7 @@ class NanoImage
 	 */
 	public function setHeight(int $height): self
 	{
-		$this->new_height = $height;
+		$this->newHeight = $height;
 		return $this;
 	}
 
@@ -369,7 +397,7 @@ class NanoImage
 	 */
 	public function setWidth(int $width): self
 	{
-		$this->new_width = $width;
+		$this->newWidth = $width;
 		return $this;
 	}
 
@@ -403,10 +431,10 @@ class NanoImage
 			return $this;
 		}
 
-		$this->new_width = $width;
-		$this->new_height = $height;
-		$this->crop_width = (int) $width;
-		$this->crop_height = (int) $height;
+		$this->newWidth = $width;
+		$this->newHeight = $height;
+		$this->cropWidth = (int) $width;
+		$this->cropHeight = (int) $height;
 		$this->isResize = true;
 		
 		return $this;
@@ -477,32 +505,78 @@ class NanoImage
 	 */
 	public function blur(int $range = 5, int $argument = 999): self
 	{
-		if ($this->useRatio && !$this->isResize) {
-			$this->calculateAspectRatio($this->new_width, $this->new_height);
+		if(!$this->imageData instanceof GdImage){
+			return $this;
 		}
 
-		$size = [
-			'sm'=> ['w'=>intval($this->new_width/4), 'h'=>intval($this->new_height/4)],
-			'md'=> ['w'=>intval($this->new_width/2), 'h'=>intval($this->new_height/2)]
-		]; 
+		$imageSmall = false;
+		$imageMedium = false;
 
-		$imageSmall = imagecreatetruecolor($size['sm']['w'],$size['sm']['h']);
+		try{
+			if ($this->useRatio && !$this->isResize) {
+				$this->calculateAspectRatio($this->newWidth, $this->newHeight);
+			}
 
-		/* Scale by 25% and apply Gaussian blur */
-		imagecopyresampled($imageSmall, $this->imageData, 0, 0, 0, 0, $size['sm']['w'], $size['sm']['h'], $this->new_width, $this->new_height);
+			$size = [
+				'sm'=> ['w'=>intval($this->newWidth/4), 'h'=>intval($this->newHeight/4)],
+				'md'=> ['w'=>intval($this->newWidth/2), 'h'=>intval($this->newHeight/2)]
+			]; 
 
-		$imageSmall = $this->applyBlur($imageSmall, $range, $argument);
+			$imageSmall = imagecreatetruecolor($size['sm']['w'], $size['sm']['h']);
 
-		/* Scale result by 200% and blur again */
-		$imageMedium = imagecreatetruecolor($size['md']['w'], $size['md']['h']);
-		imagecopyresampled($imageMedium, $imageSmall, 0, 0, 0, 0, $size['md']['w'], $size['md']['h'], $size['sm']['w'], $size['sm']['h']);
-		@imagedestroy($imageSmall);
+			if($imageSmall === false){
+				return $this;
+			}
 
-		$imageMedium = $this->applyBlur($imageMedium, 25, $argument);
+			/* Scale by 25% and apply Gaussian blur */
+			imagecopyresampled(
+				$imageSmall, 
+				$this->imageData,
+				0, 0, 0, 0, 
+				$size['sm']['w'], 
+				$size['sm']['h'],
+				$this->newWidth, 
+				$this->newHeight
+			);
 
-		/* Scale result back to original size */
-		imagecopyresampled($this->imageData, $imageMedium, 0, 0, 0, 0, $this->new_width, $this->new_height, $size['md']['w'], $size['md']['h']);
-		@imagedestroy($imageMedium); 
+			$imageSmall = $this->applyBlur($imageSmall, $range, $argument);
+
+			/* Scale result by 200% and blur again */
+			$imageMedium = imagecreatetruecolor($size['md']['w'], $size['md']['h']);
+
+			if($imageMedium === false){
+				return $this;
+			}
+
+			imagecopyresampled(
+				$imageMedium, 
+				$imageSmall, 
+				0, 0, 0, 0, 
+				$size['md']['w'], 
+				$size['md']['h'], 
+				$size['sm']['w'], 
+				$size['sm']['h']
+			);
+
+			$imageMedium = $this->applyBlur($imageMedium, 25, $argument);
+
+			/* Scale result back to original size */
+			imagecopyresampled(
+				$this->imageData, 
+				$imageMedium, 
+				0, 0, 0, 0, 
+				$this->newWidth, 
+				$this->newHeight, 
+				$size['md']['w'], 
+				$size['md']['h']
+			);
+		} finally {
+			$this->destroy($imageSmall);
+			$this->destroy($imageMedium);
+
+			$imageSmall = null;
+			$imageMedium = null;
+		}
 
 		return $this;
 	}
@@ -537,8 +611,7 @@ class NanoImage
 	 */
 	public function removeExif(string $saveTo): bool 
 	{
-		$write = $this->writeImage($this->imageData, $saveTo, 100);
-		return is_string($write) ? true : $write;
+		return $this->writeImage($this->imageData, $saveTo, 100);
 	}
 
 	/**
@@ -551,11 +624,18 @@ class NanoImage
 	 */
 	public function addExif(string $saveTo, array $data = []): bool 
 	{
-		$readExif = exif_read_data($this->imagePath);
-		$readExif['DateTime'] = date('Y:m:d H:i:s');
-		$exifData = array_merge($readExif, $data);
-		$write = $this->setExif($saveTo, $exifData);
-		return $write;
+		$exif = exif_read_data($this->imagePath);
+
+		if($exif === false){
+			return false;
+		}
+
+		$data['DateTime'] ??= date('Y:m:d H:i:s');
+	
+		return $this->setExif(
+			$saveTo, 
+			array_merge($exif, $data)
+		);
 	}
 
 	/**
@@ -568,8 +648,18 @@ class NanoImage
 	 */
 	public function setExif(string $saveTo, array $data = []): bool 
 	{
-		$exifThumbnail = exif_thumbnail($this->imagePath, $width, $height, $type);
-		$data['Thumbnail'] = $exifThumbnail;
+		if(!function_exists('exif_write_data')){
+			return false;
+		}
+
+		$thumbnail = exif_thumbnail($this->imagePath, $width, $height, $type);
+
+		if($thumbnail === false){
+			return false;
+		}
+
+		$data['Thumbnail'] = $thumbnail;
+
 		exif_write_data($data, $saveTo);
 
 		return $this->writeImage($this->imageData, $saveTo, 100);
@@ -583,7 +673,10 @@ class NanoImage
 	 */
 	public function display(int $quality = 100): bool 
 	{
-		header('Content-Type: ' . $this->imageMime);
+		if (!headers_sent()) {
+			header('Content-Type: ' . $this->imageMime);
+		}
+
 		return $this->build(null, $quality);
 	}
 
@@ -616,7 +709,7 @@ class NanoImage
 	public function save(string $saveTo, int $type = self::DEFAULT, int $quality = 100): bool 
 	{
 		$this->fileinfo($saveTo);
-		return  $this->execute($type, $quality);
+		return $this->execute($type, $quality);
 	}
 
 	/**
@@ -625,7 +718,7 @@ class NanoImage
 	 * @param string $saveTo The path where the image should be saved.
 	 * @param int $type Type of save (NanoImage::THUMBNAIL, NanoImage::TIMESTAMP, or NanoImage::DEFAULT).
 	 * @param int $quality The quality of the saved image (1-100, defaults to 100).
-	 * @param string|null $format Optional format to save the image (e.g., 'jpg', 'png').
+	 * @param string|null $extension Optional extension to save the image (e.g., 'jpg', 'png').
 	 * 
 	 * @return bool True on success, false on failure.
 	 * 
@@ -666,7 +759,9 @@ class NanoImage
 	 */
 	public function remove(): self 
 	{
-		unlink($this->imagePath);
+		is_file($this->imagePath) 
+			&& unlink($this->imagePath);
+
 		return $this;
 	}
 
@@ -677,10 +772,7 @@ class NanoImage
 	 */
 	public function free(): void 
 	{
-		if ($this->imageData) {
-			@imagedestroy($this->imageData);
-		}
-
+		$this->destroy($this->imageData);
 		$this->imagePath = '';
 		$this->imageData = false;
 		$this->imageMime = '';
@@ -692,12 +784,26 @@ class NanoImage
 		$this->height = 0;
 		$this->width = 0;
 		$this->filters = [];
-		$this->new_width = 0;
-		$this->new_height = 0;
-		$this->crop_height = 0;
-		$this->crop_width = 0;
+		$this->newWidth = 0;
+		$this->newHeight = 0;
+		$this->cropHeight = 0;
+		$this->cropWidth = 0;
 		$this->useRatio = false;
 		$this->isResize = false;
+	}
+
+	/**
+	 * Image destroy.
+	 * 
+	 * @param GdImage|bool $image
+	 * 
+	 * @return void
+	 */
+	private function destroy(GdImage|bool $image): void 
+	{
+		if ($image instanceof GdImage && PHP_VERSION_ID < 80500) {
+			@imagedestroy($image);
+		}
 	}
 
 	/**
@@ -712,15 +818,15 @@ class NanoImage
 		$aspectRatio = $this->width / $this->height;
 
 		if ($width / $height > $aspectRatio) {
-			$this->new_width = (int) ($height * $aspectRatio);
-			$this->new_height = $height;
+			$this->newWidth = (int) ($height * $aspectRatio);
+			$this->newHeight = $height;
 		} else {
-			$this->new_width = $width;
-			$this->new_height = (int) ($width / $aspectRatio);
+			$this->newWidth = $width;
+			$this->newHeight = (int) ($width / $aspectRatio);
 		}
 
-		$this->crop_width = (int) $width;
-		$this->crop_height = (int) $height;
+		$this->cropWidth = (int) $width;
+		$this->cropHeight = (int) $height;
 		$this->useRatio = true;
 	}
 
@@ -731,7 +837,12 @@ class NanoImage
 	 */
 	private function defaultLocation(): string
 	{
-		return __DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'nano-image' . self::JPEG;
+		return __DIR__ 
+			. DIRECTORY_SEPARATOR 
+			. 'images' 
+			. DIRECTORY_SEPARATOR 
+			. 'nano-image' 
+			. self::JPEG;
 	}
 
 	/**
@@ -744,29 +855,46 @@ class NanoImage
 	 */
 	private function build(?string $path = null, int $quality = 100): bool
 	{
-		$write = false;
 		if ($this->useRatio && !$this->isResize) {
-			$this->calculateAspectRatio($this->new_width, $this->new_height);
+			$this->calculateAspectRatio($this->newWidth, $this->newHeight);
 		}
 
-		$imageResource = imagecreatetruecolor($this->new_width, $this->new_height);
-		if ($imageResource !== false) {
-			$white = imagecolorallocate($imageResource, 255, 255, 255);
-			imagefilledrectangle($imageResource, 0, 0, $this->new_width, $this->new_height, $white);
+		$image = imagecreatetruecolor($this->newWidth, $this->newHeight);
+
+		if ($image === false) {
+			return false;
+		}
+
+		try{
+			$white = imagecolorallocate($image, 255, 255, 255);
+
+			if($white === false){
+				return false;
+			}
+
+			imagefilledrectangle($image, 0, 0, $this->newWidth, $this->newHeight, $white);
 			
-			
-			if (imagecopyresampled($imageResource, $this->imageData, 0, 0, 0, 0, $this->new_width, $this->new_height, $this->width, $this->height)) {
-				$write = $this->writeImage(
-					$this->applyFilters($imageResource),
+			if (imagecopyresampled(
+				$image, 
+				$this->imageData, 
+				0, 0, 0, 0, 
+				$this->newWidth, 
+				$this->newHeight, 
+				$this->width, 
+				$this->height
+			)) {
+				return $this->writeImage(
+					$this->applyFilters($image),
 					$path, 
 					$quality
 				);
 			}
-
-			@imagedestroy($imageResource);
+		} finally {
+			$this->destroy($image);
+			$image = null;
 		}
 
-		return $write;
+		return false;
 	}
 
 	/**
@@ -808,26 +936,30 @@ class NanoImage
 	{
 		$result = false;
 		$quality = max(0, min(100, $quality));
-		switch ($this->imageIntType) {
-			case IMAGETYPE_BMP:
-				$result = function_exists('imagebmp') 
-					? imagebmp($image, $file) 
-					: $this->image_bmp($image, $file);
-				break;
-			case IMAGETYPE_PNG:
-				$result = imagepng($image, $file, min(9, (int)($quality / 10)));
-				break;
-			case IMAGETYPE_GIF:
-				$result = imagegif($image, $file);
-				break;
-			case IMAGETYPE_WEBP:
-				$result = imagewebp($image, $file, $quality);
-				break;
-			default:
-				$result = imagejpeg($image, $file, $quality);
+
+		try{
+			switch ($this->imageIntType) {
+				case IMAGETYPE_BMP:
+					$result = function_exists('imagebmp') 
+						? imagebmp($image, $file) 
+						: self::image_bmp($image, $file);
+					break;
+				case IMAGETYPE_PNG:
+					$result = imagepng($image, $file, min(9, (int)($quality / 10)));
+					break;
+				case IMAGETYPE_GIF:
+					$result = imagegif($image, $file);
+					break;
+				case IMAGETYPE_WEBP:
+					$result = imagewebp($image, $file, $quality);
+					break;
+				default:
+					$result = imagejpeg($image, $file, $quality);
+			}
+		} finally {
+			$this->destroy($this->imageData);
+			$this->imageData = false;
 		}
-		
-		@imagedestroy($this->imageData);
 		
 		return $result;
 	}
@@ -843,25 +975,31 @@ class NanoImage
 	 */
 	private function execute(int $nameFormat = self::DEFAULT, int $quality = 90): bool 
 	{
-		if(!is_dir($this->dirname)){
-			mkdir($this->dirname, 0755, true);
+		if(!is_dir($this->dirname) && !mkdir($this->dirname, 0755, true)){
+			return false;
 		}
 
-		if(file_exists($this->finalPath)){
+		if(is_file($this->finalPath)){
 			$deleteFile = true;
+
 		    if($nameFormat !== self::DEFAULT){
 				if($nameFormat === self::THUMBNAIL){
-					$thumbnailPath = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . $this->crop_width . 'x' . $this->crop_height . "." . $this->extension;
-					$deleteFile = file_exists($thumbnailPath);
-					$this->finalPath = $thumbnailPath;
+					$this->finalPath = $this->dirname 
+						. DIRECTORY_SEPARATOR 
+						. $this->filename 
+						. "-{$this->cropWidth}x{$this->cropHeight}.{$this->extension}";
 				}else if($nameFormat === self::TIMESTAMP){
 					$deleteFile = false;
-					$this->finalPath = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "-" . date("d-m-y h:m:s") . "." . $this->extension;
+					$this->finalPath = $this->dirname 
+						. DIRECTORY_SEPARATOR 
+						. "{$this->filename}-" 
+						. date("d-m-y h:m:s") 
+						. ".{$this->extension}";
 				}
 		    }
 			
-			if($deleteFile){
-				unlink($this->finalPath);
+			if($deleteFile && is_file($this->finalPath)){
+				@unlink($this->finalPath);
 		    }
 		}
 
@@ -878,11 +1016,21 @@ class NanoImage
 	 */
 	private function fileinfo(string $saveTo, ?string $extension = null): void 
 	{
-		$info = pathinfo((!empty($saveTo) ? $saveTo : $this->defaultLocation()) );
-		$this->extension = ($extension === null ? strtolower($info['extension']) : $extension);
+		$info = pathinfo(!empty($saveTo) 
+			? $saveTo 
+			: $this->defaultLocation() 
+		);
+
+		$this->extension = ($extension === null) 
+			? strtolower($info['extension']) 
+			: strtolower($extension);
+
 		$this->dirname = $info['dirname'] ?? '';
 		$this->filename = $info['filename'] ?? '';
-		$this->finalPath = $this->dirname . DIRECTORY_SEPARATOR . $this->filename . "." . $this->extension;
+		$this->finalPath = $this->dirname 
+			. DIRECTORY_SEPARATOR 
+			. $this->filename
+			. ".{$this->extension}";
 	}
 
 	/**
@@ -893,9 +1041,14 @@ class NanoImage
 	 *
 	 * @return string|bool Return true if file path is specified and images is written, otherwise return false.
 	 */
-	private function image_bmp(GdImage $image, ?string $file = null, int $quality = -1): bool
+	public static function image_bmp(
+		GdImage $image, 
+		?string $file = null, 
+		bool $compressed = true,
+		int $quality = -1
+	): bool
 	{
-		if (!$image || ($quality !== -1 && ($quality < 1 || $quality > 100))) {
+		if ($quality !== -1 && ($quality < 1 || $quality > 100)) {
 			return false;
 		}
 
@@ -937,7 +1090,7 @@ class NanoImage
 		$bmpData .= pack('l', -$height); // Image height (negative for top-down image)
 		$bmpData .= pack('v', 1); // Number of color planes (must be 1)
 		$bmpData .= pack('v', 24); // Bits per pixel (RGB)
-		$bmpData .= pack('V', 0); // Compression method (0 = uncompressed)
+		$bmpData .= pack('V', $compressed ? 1 : 0); // Compression method (0 = uncompressed)
 		$bmpData .= pack('V', $imageDataSize); // Image data size (including padding)
 		$bmpData .= pack('l', 2835); // Horizontal resolution (pixels per meter, 72 DPI)
 		$bmpData .= pack('l', 2835); // Vertical resolution (pixels per meter, 72 DPI)
@@ -954,13 +1107,15 @@ class NanoImage
 				$bmpData .= pack('C', $b) . pack('C', $g) . pack('C', $r);
 			}
 
-			$bmpData .= str_repeat("\x00", $width % 4); // Padding to ensure row length is multiple of 4 bytes
+			// Padding to ensure row length is multiple of 4 bytes
+			$bmpData .= str_repeat("\x00", $width % 4);
 		}
 
 		// Free memory of scaled image
-		if($quality !== -1){
-			@imagedestroy($image);
-		}
+		// if($quality !== -1){
+		// 	$this->destroy($image);
+		// 	$image = null;
+		// }
 
 		if ($file === null) {
 			echo $bmpData;
