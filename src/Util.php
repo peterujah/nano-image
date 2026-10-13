@@ -1,12 +1,6 @@
 <?php
 /**
- * Class NanoImage.
- *
- * A lightweight image helper built on PHP's GD extension. It can resize, crop,
- * scale, rotate, flip, filter and blur an image, convert between formats, and then
- * either send the result to the browser, return it as a string or save it to disk.
- *
- * Requires PHP 8.0+ and the GD extension.
+ * Class Util.
  *
  * @author      Peter Chigozie(NG) peterujah
  * @copyright   Copyright (c), 2019 Peter(NG) peterujah
