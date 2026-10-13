@@ -1123,7 +1123,7 @@ class NanoImage
 			return false;
 		}
 
-		return $this->execute($mode, $quality);
+		return $this->commit($mode, $quality);
 	}
 
 	/**
@@ -1152,7 +1152,7 @@ class NanoImage
 			return false;
 		}
 
-		return $this->execute($mode, $quality);
+		return $this->commit($mode, $quality);
 	}
 
 	/**
@@ -1525,7 +1525,7 @@ class NanoImage
 	 *
 	 * @return bool True if the image was saved, false otherwise.
 	 */
-	private function execute(int $mode = self::DEFAULT, $quality = 90)
+	private function commit(int $mode = self::DEFAULT, $quality = 90)
 	{
 		if (!Util::isImage($this->imageData)) {
 			return false;
