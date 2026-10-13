@@ -1460,7 +1460,7 @@ class NanoImage
 			? Util::createCanvas($width, $height) 
 			: Util::createFlatCanvas($width, $height);
 
-		if (!self::isImage($image)) {
+		if (!Util::isImage($image)) {
 			return false;
 		}
 
