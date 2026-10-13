@@ -466,6 +466,44 @@ class NanoImage
 	}
 
 	/**
+	 * Retrieves EXIF metadata from the loaded image file.
+	 *
+	 * Returns the available metadata, such as camera details, capture date, exposure
+	 * settings, image dimensions, and GPS information, depending on the image and
+	 * its embedded metadata. Requires the PHP EXIF extension and a valid image file.
+	 *
+	 * @param bool $asArray Whether to return metadata grouped into sections (default: true).
+	 * @param bool $readThumbnail Whether to read the embedded thumbnail, if available (default: false).
+	 *
+	 * @return array Returns the EXIF metadata as an array, or an empty array if the image
+	 *               file is unavailable, the EXIF extension is not installed, or reading
+	 *               the metadata fails.
+	 */
+	public function getExifData(bool $asArray = true, bool $readThumbnail = false): array
+	{
+		if (
+			$this->imagePath === '' 
+			|| !is_file($this->imagePath)
+			|| !function_exists('exif_read_data') 
+		) {
+			return [];
+		}
+
+		$exif = @exif_read_data(
+			$this->imagePath, 
+			null, 
+			$asArray,
+			$readThumbnail
+		);
+
+		if ($exif === false) {
+			return [];
+		}
+
+		return $exif;
+	}
+
+	/**
 	 * Check if resize() has been called.
 	 *
 	 * @return bool True if resized, false otherwise.
@@ -967,17 +1005,9 @@ class NanoImage
 	 */
 	public function addExif(string $filename, array $data = []): bool
 	{
-		if (
-			!function_exists('exif_read_data') 
-			|| $this->imagePath === '' 
-			|| !is_file($this->imagePath)
-		) {
-			return false;
-		}
+		$exif = $this->getExifData(false);
 
-		$exif = @exif_read_data($this->imagePath);
-
-		if (!is_array($exif)) {
+		if ($exif === []) {
 			return false;
 		}
 
