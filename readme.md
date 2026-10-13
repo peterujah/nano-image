@@ -76,7 +76,7 @@ composer require peterujah/nano-image
 
 ```php
 use Peterujah\Media\NanoImage;
-use Peterujah\Media\UnsupportedImageException;
+use Peterujah\Media\Exceptions\UnsupportedImageException;
 
 try {
     $image = new NanoImage('path/to/photo.jpg');   
