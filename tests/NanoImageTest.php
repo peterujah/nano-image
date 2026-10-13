@@ -10,7 +10,7 @@ namespace Peterujah\Media\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Peterujah\Media\NanoImage;
-use Peterujah\Media\UnsupportedImageException;
+use Peterujah\Media\Exceptions\UnsupportedImageException;
 
 class NanoImageTest extends TestCase
 {
