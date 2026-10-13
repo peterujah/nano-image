@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/PHP-7.0%2B-777BB4?logo=php&logoColor=white" alt="PHP 7.0 and later">
+  <img src="https://img.shields.io/badge/PHP-8.0%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.0 and later">
   <img src="https://img.shields.io/badge/Dependency-Free-2ea44f" alt="No third-party dependencies">
   <img src="https://img.shields.io/badge/Powered%20By-GD-orange" alt="Powered by GD">
   <img src="https://img.shields.io/badge/License-MIT-blue" alt="MIT License">
@@ -43,12 +43,11 @@ NanoImage requires PHP and the GD extension. Additional capabilities depend on y
 
 | Requirement | Purpose |
 |---|---|
-| **PHP 7.0 or later** | Base runtime requirement, provided the code and tests remain compatible with the selected PHP version. |
+| **PHP 8.0 or later** | Base runtime requirement, provided the code and tests remain compatible with the selected PHP version. |
 | **GD extension (`ext-gd`)** | Required for image processing. A missing extension raises `UnsupportedImageException`. |
 | **GD format support** | WebP, AVIF, and BMP support depends on the installed GD build. |
 | **EXIF extension (`ext-exif`)** | Required only for `addExif()` when reading EXIF data from the source image. |
 
-> **Compatibility note:** The library's minimum PHP version and the PHP versions used for testing are separate things. If the implementation uses syntax introduced in PHP 8.0, it must be updated before it can genuinely support PHP 7.0. Verify the source code and run the test suite against PHP 7.0 before advertising that compatibility.
 
 ### Supported Image Formats
 
@@ -240,7 +239,7 @@ $image->free();                             // release memory and reset the inst
 | GIF | yes | yes | on/off only |
 | WebP | if GD has WebP | if GD has WebP | yes |
 | AVIF | if GD has AVIF (PHP 8.1+) | if GD has AVIF | yes |
-| BMP | PHP 7.2+ | yes (a built-in writer is used on PHP < 7.2) | no, flattened on white |
+| BMP | yes | yes | no, flattened on white |
 
 Check what your server supports with `print_r(gd_info());`. A format GD cannot decode throws `UnsupportedImageException` when loading; one it cannot encode makes the save return `false`.
 
