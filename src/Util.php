@@ -73,7 +73,7 @@ final class Util
 		$width = imagesx($image);
 		$height = imagesy($image);
 		$work = $image;
-		$ownsWork = false;
+		$newImage = false;
 
 		try {
 			if ($quality !== -1) {
@@ -91,7 +91,7 @@ final class Util
 					return false;
 				}
 
-				$ownsWork = true;
+				$newImage = true;
 				imagefill($work, 0, 0, imagecolorallocate($work, 255, 255, 255));
 
 				if (
@@ -165,7 +165,7 @@ final class Util
 
 			return $ok;
 		} finally {
-			if ($ownsWork) {
+			if ($newImage) {
 				self::destroy($work);
 			}
 		}
@@ -179,7 +179,8 @@ final class Util
 	 * @param int $quality Quality, 0 to 100 (clamped).
 	 * @param int $type `IMAGETYPE_*` format.
 	 *
-	 * @return bool True if the image was encoded, false if the format or its GD encoder is unavailable or encoding failed.
+	 * @return bool True if the image was encoded, false if the format 
+	 * 		or its GD encoder is unavailable or encoding failed.
 	 */
 	public static function encode(
         mixed $image, 
@@ -378,7 +379,7 @@ final class Util
 
 		try {
 			$canvas = @imagecreatetruecolor($width, $height);
-		} catch (Throwable $e) {
+		} catch (Throwable) {
 			return false;
 		}
 
