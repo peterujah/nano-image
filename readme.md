@@ -19,39 +19,38 @@
 
 ## Overview
 
-NanoImage provides the image tools you need for everyday PHP projects without adding a large dependency to your application. It uses the built-in capabilities of the GD extension to manipulate images, convert between supported formats, and output the result in different ways.
+NanoImage is a lightweight PHP image library built on the GD extension. It provides common image operations, including resizing, cropping, rotating, applying filters, and converting between supported formats.
 
-Whether you need to create thumbnails, crop profile pictures, apply filters, or prepare images for storage, NanoImage keeps the process simple.
+Images can be displayed directly, returned as binary data, or saved to a file. NanoImage also handles transparency, supports safe file saving, and checks which image formats are available in the current GD installation.
 
 ### Features
 
 | Feature | Description |
 |---|---|
-| **Resize & Scale** | Change image dimensions while preserving the aspect ratio when needed. |
-| **Crop** | Extract a specific area of an image. |
-| **Rotate & Flip** | Rotate images and flip them horizontally or vertically. |
-| **Filters & Blur** | Apply image filters and blur effects. |
-| **Format Conversion** | Convert images between supported formats. |
-| **Flexible Output** | Display an image, return its binary data as a string, or save it to disk. |
-| **Transparency Support** | Preserve transparency for supported formats or flatten transparent areas when required. |
-| **Safe File Saving** | Avoid leaving partially written files behind and preserve existing files when a save fails. |
-| **Runtime Format Checks** | Check whether the current GD installation supports the requested image format. |
+| Resize and Scale | Resize images with optional aspect ratio preservation. |
+| Crop | Crop an image to a specified area. |
+| Rotate and Flip | Rotate images and flip them horizontally or vertically. |
+| Filters and Blur | Apply image filters and blur effects. |
+| Format Conversion | Convert images to supported output formats. |
+| Flexible Output | Display images, return binary data, or save them to a file. |
+| Transparency | Preserve transparency in supported formats or flatten transparent areas when needed. |
+| Safe File Saving | Write to a temporary file before replacing the destination, helping prevent partial files and preserve existing files when saving fails. |
+| Format Support Checks | Check which image formats the current GD installation can read or write. |
+
 
 ### Requirements
 
-NanoImage requires PHP and the GD extension. Additional capabilities depend on your PHP build and the features enabled in GD.
+Requires PHP and the GD extension. Support for individual image formats depends on the installed PHP and GD build.
 
 | Requirement | Purpose |
 |---|---|
-| **PHP 8.0 or later** | Base runtime requirement, provided the code and tests remain compatible with the selected PHP version. |
-| **GD extension (`ext-gd`)** | Required for image processing. A missing extension raises `UnsupportedImageException`. |
-| **GD format support** | WebP, AVIF, and BMP support depends on the installed GD build. |
-| **EXIF extension (`ext-exif`)** | Required only for `addExif()` when reading EXIF data from the source image. |
+| PHP `8.0` or later | Required PHP version. |
+| GD extension (`ext-gd`) | Required for image processing. |
+| GD format support | WebP, AVIF, and other format support depends on the installed GD build. |
+| EXIF extension (`ext-exif`) | Required only for read/write EXIF metadata |
 
 
 ### Supported Image Formats
-
-NanoImage supports the following formats when the corresponding image functions are available in the installed GD build.
 
 | Format | Extension | Transparency |
 |---|---|---|
@@ -64,15 +63,6 @@ NanoImage supports the following formats when the corresponding image functions 
 
 See [Supported Formats](#supported-formats) for format detection and runtime availability details.
 
-### Output Options
-
-NanoImage supports different ways to use the processed image:
-
-- **Display:** Send the image output to the browser.
-- **Return:** Get the image data as a string for further processing.
-- **Save:** Write the processed image to a file.
-
-> Failed saves are handled without leaving a partially written destination file or destroying an existing file.
 
 ---
 
@@ -106,14 +96,6 @@ try {
 }
 ```
 
-## How it works
-
-* **Loading** (`open()`, `load()`, the constructor) throws `UnsupportedImageException` on failure.
-* **Resize, `setWidth()`, `setHeight()`, filters** are *queued* and applied when you output the image.
-* **`crop()`, `scale()`, `rotate()`, `flip()`, `blur()`** run *immediately*. A pending `resize()` is applied first, so crop coordinates refer to the resized image.
-* **Output methods** (`save()`, `saveAs()`, `replace()`, `toString()`, `get()`, `display()`) return `false` (or `''` for `toString()`) when they fail. They do **not** free the image, so you can output several versions from one instance. Call `free()` when finished.
-* **Invalid arguments** (zero or negative sizes, a crop outside the image, a bad colour, ...) throw `InvalidArgumentException`. Calling an editing method with no image loaded throws `LogicException`. Running out of memory or a failed GD call throws `RuntimeException`.
-
 ---
 
 ## Loading
@@ -129,6 +111,7 @@ $image->load(file_get_contents('photo.png'));  // from a string
 $image->getWidth();      // int, pixels of the image as currently held
 $image->getHeight();     // int
 $image->getMimeType();   // e.g. "image/jpeg"
+$image->getExifData();   // e.g. "image/jpeg"
 ```
 
 Loading a new image replaces (and frees) the previous one. Images that would not fit in PHP's `memory_limit` are rejected up front with an `UnsupportedImageException` instead of crashing PHP.
@@ -262,6 +245,7 @@ GD never copies metadata into the images it writes, so every saved image is alre
 | `load(string $data)` | `self` | throws `UnsupportedImageException` |
 | `getWidth()`, `getHeight()` | `int` | current size in pixels |
 | `getMimeType()` | `string` | MIME type of the source |
+| `getExifData()` | `array` | Read Image exift data |
 | `getExtension()` | `string` | extension used by the last save |
 | `getSavedPath()` | `string` | file written by the last successful save |
 | `isResized()` | `bool` | whether `resize()` was called |
@@ -282,6 +266,16 @@ GD never copies metadata into the images it writes, so every saved image is alre
 | `free()` | `void` | release memory |
 
 Constants: `JPG`, `JPEG`, `PNG`, `GIF`, `WEBP`, `BMP`, `AVIF`, `DEFAULT`, `THUMBNAIL`, `TIMESTAMP`, `FLIP_HORIZONTAL`, `FLIP_VERTICAL`, `FLIP_BOTH`.
+
+---
+
+## How It Works
+
+- **Loading:** `open()`, `load()`, and the constructor throw `UnsupportedImageException` if the image cannot be loaded.
+- **Queued operations:** `resize()`, `setWidth()`, `setHeight()`, and filters are queued and applied when the image is output.
+- **Immediate operations:** `crop()`, `scale()`, `rotate()`, `flip()`, and `blur()` run immediately. Any pending resize is applied first, so crop coordinates refer to the resized image.
+- **Output:** `save()`, `saveAs()`, `replace()`, `toString()`, `get()`, and `display()` return `false` on failure, except `toString()`, which returns an empty string. These methods do not release the image, allowing you to produce multiple outputs from the same instance. Call `free()` when finished.
+- **Errors:** Invalid arguments, such as non-positive dimensions, out-of-bounds crop coordinates, or invalid colours, throw `InvalidArgumentException`. Editing without a loaded image throws `LogicException`. Memory exhaustion or a failed GD operation throws `RuntimeException` where detected.
 
 ---
 
