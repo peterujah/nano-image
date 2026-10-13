@@ -1502,7 +1502,7 @@ class NanoImage
 		foreach ($this->filters as $filter) {
 			try {
 				$result = @imagefilter($image, ...$filter);
-			} catch (Throwable $e) {
+			} catch (Throwable) {
 				return false;
 			}
 
