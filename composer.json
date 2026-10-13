@@ -1,8 +1,18 @@
 {
     "name": "peterujah/nano-image",
     "type": "library",
-    "description": "NanoImage is a simple PHP image resize class.",
-    "keywords": ["image", "image-lib", "php image", "php", "edit image"],
+    "description": "A lightweight PHP image manipulation library powered by GD.",
+    "keywords": [
+        "php",
+        "image",
+        "image-manipulation",
+        "image-processing",
+        "resize",
+        "crop",
+        "rotate",
+        "filters",
+        "gd"
+    ],
     "license": "MIT",
     "authors": [
         {
@@ -11,18 +21,23 @@
         }
     ],
     "require": {
-        "php": "^7.0 || ^8.0",
-        "ext-mbstring": "*",
-        "ext-exif": "*"
+        "php": "^8.0",
+        "ext-gd": "*"
+    },
+    "suggest": {
+        "ext-exif": "Required for reading source image EXIF metadata."
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
     },
     "autoload": {
-        "psr-4": { 
-            "Peterujah\\Media\\": "src/" 
+        "psr-4": {
+            "Peterujah\\Media\\": "src/"
         }
     },
-     "extra": {
-        "branch-alias": {
-            "dev-master": "1.2-dev"
+    "autoload-dev": {
+        "psr-4": {
+            "Peterujah\\Media\\Tests\\": "tests/"
         }
     },
     "config": {
