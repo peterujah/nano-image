@@ -274,7 +274,7 @@ final class Util
 		$width = imagesx($image);
 		$height = imagesy($image);
 
-		if (!self::canAllocate($width, $height)) {
+		if (!self::canAllocateMemory($width, $height)) {
 			return false;
 		}
 
@@ -345,7 +345,7 @@ final class Util
 		$width = imagesx($image);
 		$height = imagesy($image);
 
-		if (!self::canAllocate($width, $height)) {
+		if (!self::canAllocateMemory($width, $height)) {
 			self::destroy($image);
 			return false;
 		}
@@ -438,7 +438,7 @@ final class Util
 	 */
 	public static function newCanvas(int $width, int $height): mixed
 	{
-		if (!self::canAllocate($width, $height)) {
+		if (!self::canAllocateMemory($width, $height)) {
 			throw new RuntimeException(
 				'Not enough memory to process the image.'
 			);
@@ -722,7 +722,7 @@ final class Util
 	 *
 	 * @return bool
 	 */
-	public static function canAllocate(int $width, int $height): bool
+	public static function canAllocateMemory(int $width, int $height): bool
 	{
 		$limit = self::memoryLimit();
 
@@ -745,7 +745,7 @@ final class Util
 	 */
 	public static function assertMemory(int $width, int $height): void
 	{
-		if (!self::canAllocate($width, $height)) {
+		if (!self::canAllocateMemory($width, $height)) {
 			throw new UnsupportedImageException(
 				"Image dimensions {$width}x{$height} need more memory than PHP's memory_limit allows."
 			);
