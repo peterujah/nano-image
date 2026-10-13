@@ -727,8 +727,8 @@ class NanoImage
 		$mediumHeight = max(1, intdiv($height, 2));
 
 		if (
-			!Util::canAllocate($smallWidth, $smallHeight) 
-			|| !Util::canAllocate($mediumWidth, $mediumHeight)
+			!Util::canAllocateMemory($smallWidth, $smallHeight) 
+			|| !Util::canAllocateMemory($mediumWidth, $mediumHeight)
 		) {
 			throw new RuntimeException('Not enough memory to blur the image.');
 		}
@@ -919,7 +919,7 @@ class NanoImage
 		$estWidth = (int) ceil(abs($this->width * cos($radians)) + abs($this->height * sin($radians)));
 		$estHeight = (int) ceil(abs($this->width * sin($radians)) + abs($this->height * cos($radians)));
 
-		if (!Util::canAllocate(max(1, $estWidth), max(1, $estHeight))) {
+		if (!Util::canAllocateMemory(max(1, $estWidth), max(1, $estHeight))) {
 			throw new RuntimeException('Not enough memory to rotate the image.');
 		}
 
@@ -1482,7 +1482,7 @@ class NanoImage
 			);
 		}
 
-		if (!Util::canAllocate($width, $height)) {
+		if (!Util::canAllocateMemory($width, $height)) {
 			return false;
 		}
 
